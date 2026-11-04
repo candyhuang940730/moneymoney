@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}受邀者入口｜Hydra Underground{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('website.index') }}" aria-label="Hydra Underground 地下網站首頁">
+      <span class="brand-mark" aria-hidden="true">H<span>/</span>U</span>
+      <span class="brand-name">HYDRA <strong>UNDERGROUND</strong></span>
+    </a>
+    <button class="briefing-toggle" type="button" data-story-open aria-haspopup="dialog" aria-controls="story-dialog">
+      <span class="briefing-pulse" aria-hidden="true"></span> 開啟調查簡報 <span aria-hidden="true">↗</span>
+    </button>
+  </header>
+
+  <main class="login-layout">
+    <section class="intro-column" aria-labelledby="page-title">
+      <div class="system-line"><span class="status-dot"></span> 私人節點已連線 <span class="system-separator">/</span> 存取權限受限</div>
+      <p class="eyebrow">地下網路 · 受邀者入口</p>
+      <h1 id="page-title">門已開啟。<br><span>但不是為每個人。</span></h1>
+      <p class="intro-copy">Hydra 的網路不留下公開入口。若你持有受邀者身分，請完成驗證；若沒有，先觀察這扇門如何運作。</p>
+
+      <div class="signal-card" aria-hidden="true">
+        <div class="signal-card-top"><span>節點觀測</span><span>H/U—01</span></div>
+        <div class="signal-visual"><div class="signal-ring signal-ring-outer"></div><div class="signal-ring signal-ring-inner"></div><span class="signal-glyph">H<span>⟋</span>U</span></div>
+        <div class="signal-card-bottom"><span>訊號穩定</span><span>等待身分驗證_</span></div>
+      </div>
+
+      <div class="intel-strip"><span>情報片段 01</span><p>「任何堅固的入口，都要先相信某個輸入。」</p></div>
+    </section>
+
+    <section class="login-column" aria-labelledby="login-title">
+      <div class="login-panel">
+        <div class="panel-topline"><span class="panel-index">01 / 身分驗證</span><span class="panel-lock" aria-hidden="true">◇</span></div>
+        <div class="panel-heading"><p class="eyebrow">僅限受邀者</p><h2 id="login-title">登入地下網路</h2><p>使用你取得的受邀帳號進入。此處不提供公開註冊。</p></div>
+
+        <form class="login-form" method="post" action="/site/login" aria-describedby="login-note">
+          <label for="username">帳號識別碼</label>
+          <input id="username" name="username" type="text" autocomplete="username" placeholder="輸入帳號" required>
+
+          <div class="field-heading"><label for="password">存取密碼</label><a href="/site/forgot-password">忘記密碼？</a></div>
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="輸入密碼" required>
+
+          <p id="login-note" class="form-note"><span class="status-dot"></span> 此節點僅接受持有邀請身分的使用者。</p>
+          <div class="form-feedback" role="status" aria-live="polite" hidden></div>
+          <button class="submit-button" type="submit">驗證身分 <span aria-hidden="true">↗</span></button>
+        </form>
+        <div class="panel-footer"><span>安全通道 / H-U-LOGIN</span><span>拒絕未授權連線</span></div>
+      </div>
+      <p class="login-aside">沒有受邀身分？<span>地下網路不接受公開申請。</span></p>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>HYDRA UNDERGROUND / 地下網站</span><span>本機授權資安教學靶場 · 所有內容均為虛構</span></footer>
+</div>
+
+<dialog id="story-dialog" class="story-dialog" data-story-dialog aria-labelledby="story-title" aria-describedby="story-lead">
+  <div class="dialog-topline"><span><span class="status-dot"></span> 調查員專線 / 機密簡報</span><button type="button" class="dialog-close" data-story-close aria-label="關閉調查簡報">×</button></div>
+  <div class="dialog-content">
+    <p class="eyebrow">第一章 / 初來乍到</p>
+    <h2 id="story-title">你已接近<br><span>Hydra 的入口。</span></h2>
+    <p id="story-lead" class="story-lead">你是一名潛入地下交易網路的資安調查員。Hydra 的市場只接納受邀者；眼前這個登入頁面，是追查組織的第一道門。</p>
+    <p class="story-objective">觀察它如何驗證身分、處理失敗與找回密碼。取得線索後，將 FLAG 帶回任務中心。</p>
+    <div class="investigation-box"><h3>可以觀察的方向</h3><p>登入頁常見的問題可能藏在這些環節；以下是探索範圍，並不表示每一項都存在於本關。</p><ul><li>輸入檢查與回顯</li><li>錯誤訊息與帳號列舉</li><li>前後端驗證差異</li><li>驗證碼與嘗試次數</li><li>請求參數與方法</li><li>資料查詢與認證邏輯</li><li>忘記密碼流程</li><li>Cookie、Session 與導向</li></ul></div>
+    <button class="dialog-action" type="button" data-story-close>開始調查 <span aria-hidden="true">↗</span></button>
+  </div>
+  <span class="dialog-coordinate" aria-hidden="true">H/U · 01/05</span>
+</dialog>
+{% endblock %}
+
+{% block scripts %}<script defer src="{{ url_for('static', filename='js/story_intro.js') }}"></script>{% endblock %}
+
