@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}導覽入口｜Hydra Underground{% endblock %}
+
+{% block content %}
+<div class="page-shell portal-page">
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('portal') }}" aria-label="Hydra Underground 導覽首頁">
+      <span class="brand-mark" aria-hidden="true">H<span>/</span>U</span>
+      <span class="brand-name">HYDRA <strong>UNDERGROUND</strong></span>
+    </a>
+    <span class="portal-status"><span class="status-dot"></span> 調查節點已連線</span>
+  </header>
+
+  <main class="portal-main">
+    <section class="portal-hero" aria-labelledby="portal-title">
+      <div class="portal-copy">
+        <p class="eyebrow">調查入口 / H-U-00</p>
+        <h1 id="portal-title">一條線索。<br><span>兩個入口。</span></h1>
+        <p>Hydra 的地下網路已出現異常訊號。先在任務中心確認調查方向，或直接進入地下網站，尋找這個組織留下的痕跡。</p>
+        <div class="portal-facts"><span><strong>05</strong> 個章節</span><span><strong>01</strong> 個調查目標</span><span><strong>H/U</strong> 本機靶場</span></div>
+      </div>
+      <div class="portal-visual" aria-hidden="true"><span class="portal-visual-label">訊號追蹤 / 00—05</span><div class="portal-orbit portal-orbit-one"></div><div class="portal-orbit portal-orbit-two"></div><span class="portal-visual-glyph">H<span>⟋</span>U</span><span class="portal-visual-caption">等待調查員選擇路徑_</span></div>
+    </section>
+
+    <section class="portal-choices" aria-labelledby="choices-title">
+      <div class="section-heading"><div><p class="eyebrow">選擇路徑</p><h2 id="choices-title">從這裡開始</h2></div><span>01 / 02</span></div>
+      <div class="portal-card-grid">
+        <a class="portal-card portal-card-center" href="{{ url_for('ctf_center.index') }}"><span class="portal-card-top">01 <span>作戰終端</span></span><span class="portal-card-icon" aria-hidden="true">⌁</span><strong>任務中心</strong><span class="portal-card-description">閱讀任務簡報與五章調查路線，確認下一步目標。</span><span class="portal-card-action">開啟終端 <span aria-hidden="true">↗</span></span></a>
+        <a class="portal-card portal-card-site" href="{{ url_for('website.index', intro=1) }}"><span class="portal-card-top">02 <span>目標網路</span></span><span class="portal-card-icon" aria-hidden="true">◇</span><strong>地下網站</strong><span class="portal-card-description">進入 Hydra 的受邀者入口，觀察它如何守住第一道門。</span><span class="portal-card-action">進入網站 <span aria-hidden="true">↗</span></span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>HYDRA UNDERGROUND / 導覽入口</span><span>本機授權資安教學靶場 · 所有內容均為虛構</span></footer>
+</div>
+{% endblock %}
+
