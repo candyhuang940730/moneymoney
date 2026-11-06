@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}編輯貼文｜Hydra Underground{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/posts.css') }}">
+
+<div class="page-shell">
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('website.index') }}">
+      <span class="brand-mark">H<span>/</span>U</span>
+      <span class="brand-name">
+        HYDRA <strong>UNDERGROUND</strong>
+      </span>
+    </a>
+
+    <div class="header-actions">
+      <a class="header-link" href="{{ url_for('posts.post_list') }}">
+        返回貼文列表
+      </a>
+    </div>
+  </header>
+
+  <main class="seller-main">
+    <div class="seller-status">
+      <span class="status-dot"></span>
+      SELLER TERMINAL / EDIT POST
+    </div>
+
+    <section class="seller-hero">
+      <p class="eyebrow">SELLER NETWORK / EDIT</p>
+      <h1>修改市場<br><span>交易情報。</span></h1>
+      <p class="seller-description">
+        編輯文章標題與內容，儲存後將更新貼文。
+      </p>
+    </section>
+
+    <section class="seller-form-panel">
+      <p class="eyebrow">
+        POST-{{ "%03d"|format(post.id) }}
+      </p>
+      <h2>編輯賣家貼文</h2>
+
+      <form method="POST" enctype="multipart/form-data" class="seller-form">
+        <label for="title">文章標題</label>
+        <input id="title" name="title" type="text" maxlength="100" value="{{ post.title }}" required>
+
+        <label for="content">文章內容</label>
+        <textarea id="content" name="content" rows="8" required>{{ post.content }}</textarea>
+
+        {% if post.image_filename %}
+        <label>目前圖片</label>
+        <img class="seller-edit-preview" src="{{ url_for('posts.post_image', post_id=post.id) }}" alt="目前商品圖片">
+        {% endif %}
+
+        <label for="image">更換商品圖片</label>
+
+        <input type="file" id="image" name="image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+
+        <p class="seller-image-hint">
+          不選擇新圖片則保留原圖。
+        </p>
+
+
+        <button class="seller-button" type="submit">
+          儲存修改 ↗
+        </button>
+      </form>
+    </section>
+  </main>
+</div>
+{% endblock %}

@@ -4,3 +4,6 @@ __pycache__/
 .env
 .pytest_cache/
 
+# SQLite 資料庫與賣家上傳圖片
+instance/
+*.sqlite3

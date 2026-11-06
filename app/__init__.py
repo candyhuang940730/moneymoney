@@ -8,9 +8,11 @@ def create_app() -> Flask:
 
     from app.ctf_center.routes import ctf_center_bp
     from app.website.routes import website_bp
+    from app.website.market.posts import posts_bp
 
     app.register_blueprint(ctf_center_bp)
     app.register_blueprint(website_bp)
+    app.register_blueprint(posts_bp)
 
     @app.get("/")
     def portal():

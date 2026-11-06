@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}賣家貼文｜Hydra Underground{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/posts.css') }}">
+
+<div class="page-shell">
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('website.index') }}">
+      <span class="brand-mark">H<span>/</span>U</span>
+      <span class="brand-name">HYDRA <strong>UNDERGROUND</strong></span>
+    </a>
+    <div class="header-actions">
+      <a class="header-link" href="{{ url_for('portal') }}">導覽入口</a>
+      <a class="header-link" href="{{ url_for('ctf_center.index') }}">任務中心</a>
+      <a class="header-link" href="{{ url_for('website.index') }}">地下網站</a>
+    </div>
+  </header>
+
+  <main class="seller-main">
+    <div class="seller-status">
+      <span class="status-dot"></span>
+      私人節點已連線 / MARKET NETWORK
+    </div>
+
+    <section class="seller-hero">
+      <p class="eyebrow">UNDERGROUND MARKET / SELLER POSTS</p>
+      <h1>地下市場。<br><span>賣家情報。</span></h1>
+      <p class="seller-description">
+        在這裡查看賣家發布的交易資訊。
+        每則文章都可能隱藏值得調查的線索。
+      </p>
+    </section>
+
+    <section class="seller-section">
+      <div class="seller-section-header">
+        <div>
+          <p class="eyebrow">MARKET INTELLIGENCE</p>
+          <h2>最新賣家貼文</h2>
+        </div>
+        <a class="seller-button" href="{{ url_for('posts.create_post') }}">
+          ＋ 發布新貼文 ↗
+        </a>
+      </div>
+
+      <div class="seller-post-grid">
+        {% for post in posts %}
+        <article class="seller-card">
+
+          {% if post.image_filename %}
+          <img class="seller-card-image" src="{{ url_for('posts.post_image', post_id=post.id) }}" alt="{{ post.title }}"
+            loading="lazy">
+          {% endif %}
+
+          <div class="seller-card-top">
+            <span>POST-{{ "%03d"|format(post.id) }}</span>
+            <span>SELLER NETWORK</span>
+          </div>
+
+          <h3>{{ post.title }}</h3>
+          <p class="seller-preview">
+            {{ post.content|truncate(120) }}
+          </p>
+
+          <div class="seller-card-bottom">
+            <span>發布者 / {{ post.author }}</span>
+            <a href="{{ url_for('posts.post_detail', post_id=post.id) }}">
+              查看情報 ↗
+            </a>
+          </div>
+        </article>
+        {% else %}
+        <div class="seller-empty">目前沒有賣家貼文。</div>
+        {% endfor %}
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>HYDRA UNDERGROUND / 賣家情報</span>
+    <span>本機授權資安教學靶場 · 所有內容均為虛構</span>
+  </footer>
+</div>
+{% endblock %}

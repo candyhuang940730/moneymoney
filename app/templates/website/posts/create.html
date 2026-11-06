@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}發布貼文｜Hydra Underground{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/posts.css') }}">
+
+<div class="page-shell">
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('website.index') }}">
+      <span class="brand-mark">H<span>/</span>U</span>
+      <span class="brand-name">HYDRA <strong>UNDERGROUND</strong></span>
+    </a>
+    <div class="header-actions">
+      <a class="header-link" href="{{ url_for('posts.post_list') }}">返回貼文列表</a>
+      <a class="header-link" href="{{ url_for('ctf_center.index') }}">任務中心</a>
+    </div>
+  </header>
+
+  <main class="seller-main">
+    <div class="seller-status">
+      <span class="status-dot"></span>
+      SELLER TERMINAL / WRITE ACCESS
+    </div>
+
+    <section class="seller-hero">
+      <p class="eyebrow">SELLER NETWORK / NEW MESSAGE</p>
+      <h1>發布新的<br><span>市場情報。</span></h1>
+      <p class="seller-description">
+        填寫文章標題與內容，將交易情報發布至地下市場。
+      </p>
+    </section>
+
+    <section class="seller-form-panel">
+      <p class="eyebrow">01 / NEW POST</p>
+      <h2>建立賣家貼文</h2>
+
+      <form method="POST" enctype="multipart/form-data" class="seller-form">
+        <label for="title">文章標題</label>
+        <input id="title" name="title" type="text" maxlength="100" placeholder="輸入文章標題" required>
+
+        <label for="content">文章內容</label>
+        <textarea id="content" name="content" rows="8" placeholder="輸入交易情報或商品介紹..." required></textarea>
+
+        <label for="image">商品圖片（選填）</label>
+
+        <input type="file" id="image" name="image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+
+        <p class="seller-image-hint">
+          支援 JPG、PNG、WebP，檔案大小不超過 3 MB。
+        </p>
+
+
+
+        <button class="seller-button" type="submit">
+          發布文章 ↗
+        </button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>HYDRA UNDERGROUND / SELLER TERMINAL</span>
+    <span>本機授權資安教學靶場</span>
+  </footer>
+</div>
+{% endblock %}
