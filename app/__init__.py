@@ -5,6 +5,7 @@ from flask import Flask, render_template
 
 def create_app() -> Flask:
     app = Flask(__name__)
+    app.secret_key = "hydra-underground-session-secret-key"
 
     from app.ctf_center.routes import ctf_center_bp
     from app.website.routes import website_bp

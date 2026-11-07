@@ -4,9 +4,9 @@
 
 | 操作 | 預定路徑 | 預定資料 | 狀態 |
 | --- | --- | --- | --- |
-| 登入表單 | `POST /site/login` | `username`、`password` | 待實作驗證邏輯 |
+| 登入表單 | `POST /site/login` | `username`、`password` | 待下一階段實作驗證邏輯（不直接導向商品頁） |
 | 忘記密碼入口 | `GET /site/forgot-password` | 無 | 待實作 |
-| 商品頁 | `GET/POST /site/products` | 暫無 | 已實作商品卡片展示頁面，商品資料由獨立檔案 `products.json` 動態讀取載入 |
+| 商品頁 | `GET/POST /site/products` | 暫無 | 已實作正常商品頁面（BTC 計價，身分檢查已註解，以 `products-example.json` 範例檔展示） |
 
 登入失敗訊息可放在表單的 `.form-feedback` 區域。日後加入真正的登入處理時，需一併設計 CSRF 保護、Session 與伺服器端驗證；預定挑戰漏洞的具體行為則在該階段確認。
 

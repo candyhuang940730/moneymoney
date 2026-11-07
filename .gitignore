@@ -3,4 +3,8 @@ __pycache__/
 .venv/
 .env
 .pytest_cache/
+.agents/
+graphify-out/
+products-example.html
+products-example.json
 

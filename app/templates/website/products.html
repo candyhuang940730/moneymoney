@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block title %}黑市交易目錄｜Hydra Underground{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('website.index') }}" aria-label="Hydra Underground 地下網站首頁">
+      <span class="brand-mark" aria-hidden="true">H<span>/</span>U</span>
+      <span class="brand-name">HYDRA <strong>UNDERGROUND</strong></span>
+    </a>
+    <div class="header-actions">
+      <!-- 身分檢查與切換（已依需求註解，僅展示一般正常商品頁面）
+      <div class="account-chip {% if is_admin %}admin-active{% endif %}" title="目前登入身分與權限">
+        <span class="status-dot"></span>
+        <span>身分:</span>
+        <strong id="account-name">{% if is_admin %}ADMIN (管理員){% else %}{{ user }} (一般用戶){% endif %}</strong>
+        {% if is_admin %}
+        <a href="{{ url_for('website.products', role='guest') }}" class="account-toggle-btn" title="切換為一般用戶身分 (0 BTC)">切換為一般用戶</a>
+        {% else %}
+        <a href="{{ url_for('website.products', role='admin') }}" class="account-toggle-btn" title="切換為管理員帳號 (60,000 BTC)">切換為管理員</a>
+        {% endif %}
+      </div>
+      -->
+
+      <!-- 比特幣餘額 (BTC Balance) -->
+      <div class="balance-chip" title="目前帳戶可用 BTC 餘額">
+        <span class="status-dot"></span>
+        <span>餘額:</span>
+        <strong id="user-balance">{{ "{:,}".format(balance) }}</strong>
+        <span style="color: var(--faint);">BTC</span>
+      </div>
+
+      <a class="header-link" href="{{ url_for('portal') }}">導覽入口</a>
+      <a class="header-link" href="{{ url_for('ctf_center.index') }}">任務中心</a>
+      <a class="header-link" href="{{ url_for('website.index') }}">登入首頁</a>
+      <button class="briefing-toggle" type="button" data-market-briefing-open aria-haspopup="dialog" aria-controls="market-dialog">
+        <span class="briefing-pulse" aria-hidden="true"></span> 章節簡報 <span aria-hidden="true">↗</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="products-layout">
+    <section class="products-hero" aria-labelledby="marketplace-title">
+      <div class="system-line">
+        <span class="status-dot"></span> 受邀者節點已授權
+        <!-- <span class="system-separator">/</span> 存取級別: {% if is_admin %}<strong style="color: #ebd188;">TIER-ROOT (ADMIN)</strong>{% else %}TIER-2 (USER){% endif %} -->
+        <span class="system-separator">/</span> 存取級別: TIER-2 (USER)
+        <span class="system-separator">/</span> 資料來源: <strong style="color: var(--green);">products-example.json</strong>
+        <span class="system-separator">/</span> 結算代幣: <strong>BTC</strong>
+      </div>
+      <p class="eyebrow">第二章 / 資本累積 · 黑市目錄</p>
+      <h1 id="marketplace-title">地下資產清單。<br><span>未授權者無法追蹤的流通標的。</span></h1>
+      <p class="intro-copy">此頁面由後端動態讀取 <code>products-example.json</code> 資料檔案以呈現 Hydra 組織內部流通販售的特權模組、實體金鑰與外洩憑證。所有物品均以比特幣（BTC）結算，初始資金為 0 BTC。</p>
+    </section>
+
+    <!-- 工具列：搜尋、分類篩選、排序 -->
+    <section class="products-toolbar" aria-label="商品篩選與控制">
+      <div class="toolbar-controls">
+        <div class="search-box">
+          <input type="text" id="product-search" placeholder="搜尋商品名稱、編號 (SKU) 或關鍵字..." aria-label="搜尋商品">
+        </div>
+        <div class="toolbar-stats">
+          <span>共 <strong id="product-count" style="color: var(--green);">{{ products|length }}</strong> 件上架項目</span>
+          <div class="sort-select-wrapper">
+            <select id="sort-order" aria-label="商品排序">
+              <option value="featured">推薦排序 / 預設</option>
+              <option value="price-asc">價格：由低至高</option>
+              <option value="price-desc">價格：由高至低</option>
+              <option value="rating-desc">評價：最高優先</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-group" role="tablist" aria-label="商品分類標籤">
+        <button class="filter-btn active" type="button" data-filter="all">全部商品 (ALL)</button>
+        <button class="filter-btn" type="button" data-filter="exploit">漏洞情報 (EXPLOIT)</button>
+        <button class="filter-btn" type="button" data-filter="hardware">硬體金鑰 (HARDWARE)</button>
+        <button class="filter-btn" type="button" data-filter="data">資料情報 (DATA)</button>
+        <button class="filter-btn" type="button" data-filter="tool">滲透工具 (TOOL)</button>
+        <button class="filter-btn" type="button" data-filter="relay">網路節點 (RELAY)</button>
+      </div>
+    </section>
+
+    <!-- 商品卡片列表 -->
+    <section class="products-grid" id="products-container" aria-label="黑市商品卡片清單">
+      {% for item in products %}
+      <article
+        class="product-card"
+        data-id="{{ item.id }}"
+        data-sku="{{ item.sku }}"
+        data-category="{{ item.category_slug }}"
+        data-name="{{ item.name }}"
+        data-price="{{ item.price }}"
+        data-rating="{{ item.rating }}"
+        data-details="{{ item.details }}"
+      >
+        <div class="product-card-top">
+          <span class="product-sku">{{ item.sku }}</span>
+          <span class="product-category-badge category-{{ item.category_slug }}">{{ item.category }}</span>
+        </div>
+
+        <div class="product-card-visual" aria-hidden="true">
+          <span class="card-security-tag {% if 'CRITICAL' in item.security_tag or 'CONFIDENTIAL' in item.security_tag %}critical{% endif %}">{{ item.security_tag }}</span>
+          <span class="card-visual-icon">{{ item.icon }}</span>
+        </div>
+
+        <div class="product-card-body">
+          <h2 class="product-title">{{ item.name }}</h2>
+          <div class="product-subtitle">{{ item.name_en }}</div>
+          <p class="product-desc">{{ item.description }}</p>
+
+          <ul class="product-specs-list" aria-label="技術規格摘要">
+            {% for spec in item.specs %}
+            <li class="product-spec-pill">{{ spec }}</li>
+            {% endfor %}
+          </ul>
+
+          <div class="product-card-pricing">
+            <div class="price-box">
+              <span class="price-main">{{ "{:,}".format(item.price) }}</span>
+              <span class="price-currency">BTC</span>
+              <span class="price-orig">{{ "{:,}".format(item.original_price) }}</span>
+            </div>
+            <div class="stock-indicator {{ item.stock_status }}">
+              <span class="status-dot"></span>
+              <span>{{ item.stock }}</span>
+            </div>
+          </div>
+
+          <div class="product-card-actions">
+            <button class="btn-specs" type="button" data-spec-trigger="{{ item.id }}">
+              檢視規格
+            </button>
+            <button class="btn-buy" type="button" data-buy-trigger="{{ item.id }}">
+              立即採購 <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </section>
+
+    <div id="no-products-msg" class="products-empty" style="display: none;">
+      <p>⌁ 未尋獲符合篩選條件的商品節點。請更換關鍵字或選擇其他分類。</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <span>HYDRA UNDERGROUND / 第二章 · 資本累積</span>
+    <span>結算貨幣：BTC · 資料來源：products-example.json · 本機授權資安教學靶場 · 所有內容均為虛構</span>
+  </footer>
+</div>
+
+<!-- 規格詳情彈窗 (Modal Dialog) -->
+<dialog id="spec-dialog" class="story-dialog" aria-labelledby="modal-title" aria-describedby="modal-desc">
+  <div class="dialog-topline">
+    <span><span class="status-dot"></span> 節點規格調閱 / 機密技術數據</span>
+    <button type="button" class="dialog-close" data-spec-close aria-label="關閉規格視窗">×</button>
+  </div>
+  <div class="dialog-content">
+    <p class="eyebrow" id="modal-category">分類標籤</p>
+    <h2 id="modal-title">商品標題</h2>
+    <p id="modal-desc" class="story-lead">商品描述</p>
+    <div class="investigation-box" style="margin-top: 20px;">
+      <h3>底層技術細節與利用參數</h3>
+      <p id="modal-details" style="font-size: 13px; line-height: 1.8; color: #dce7db;">詳細資訊載入中...</p>
+    </div>
+    <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
+      <button class="dialog-action" type="button" data-spec-close style="margin-top: 0; width: auto; padding: 0 24px;">
+        關閉視窗
+      </button>
+    </div>
+  </div>
+  <span class="dialog-coordinate" id="modal-sku" aria-hidden="true">H/U · SKU</span>
+</dialog>
+
+<!-- 章節任務簡報彈窗 -->
+<dialog id="market-dialog" class="story-dialog" aria-labelledby="market-story-title">
+  <div class="dialog-topline">
+    <span><span class="status-dot"></span> 第二章任務簡報 / 資本累積</span>
+    <button type="button" class="dialog-close" data-market-briefing-close aria-label="關閉簡報">×</button>
+  </div>
+  <div class="dialog-content">
+    <p class="eyebrow">第二章 / 資本累積</p>
+    <h2 id="market-story-title">探索市場中的<br><span>隱密線索。</span></h2>
+    <p class="story-lead">恭喜調查員突破第一道防線進入地下交易網絡。Hydra 的黑市以 BTC 作為匿名流通貨幣。背後的交易流水與折扣驗證機制往往隱藏著核心系統的通訊密鑰。</p>
+    <div class="investigation-box">
+      <h3>第二章調查重點</h3>
+      <ul>
+        <li>商品 ID 參數與越權查詢 (IDOR)</li>
+        <li>前端價格與折價券計算邏輯驗證</li>
+        <li>負數數量或浮點數精度溢位交易</li>
+        <li>敏感資料洩漏與隱藏 API 端點</li>
+      </ul>
+    </div>
+    <button class="dialog-action" type="button" data-market-briefing-close>
+      繼續調查市場 <span aria-hidden="true">↗</span>
+    </button>
+  </div>
+  <span class="dialog-coordinate" aria-hidden="true">H/U · 02/05</span>
+</dialog>
+
+<!-- HUD 提示訊息 (Toast) -->
+<div id="cyber-toast" class="cyber-toast" role="status" aria-live="polite">
+  <div class="toast-topline">
+    <span>[系統通訊 HUD]</span>
+    <span id="toast-time">12:00:00</span>
+  </div>
+  <div id="toast-message" class="toast-msg">交易通知</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+  // 簡報 Dialog
+  const marketDialog = document.getElementById("market-dialog");
+  const openMarketBtn = document.querySelector("[data-market-briefing-open]");
+  const closeMarketBtns = document.querySelectorAll("[data-market-briefing-close]");
+
+  if (openMarketBtn && marketDialog) {
+    openMarketBtn.addEventListener("click", () => marketDialog.showModal());
+    closeMarketBtns.forEach(btn => btn.addEventListener("click", () => marketDialog.close()));
+  }
+
+  // 規格 Dialog
+  const specDialog = document.getElementById("spec-dialog");
+  const closeSpecBtns = document.querySelectorAll("[data-spec-close]");
+  closeSpecBtns.forEach(btn => btn.addEventListener("click", () => specDialog.close()));
+
+  // Toast 系統
+  const toast = document.getElementById("cyber-toast");
+  const toastMsg = document.getElementById("toast-message");
+  const toastTime = document.getElementById("toast-time");
+  let toastTimer = null;
+
+  function showToast(text) {
+    if (!toast) return;
+    const now = new Date();
+    toastTime.textContent = now.toTimeString().split(" ")[0];
+    toastMsg.textContent = text;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.classList.remove("show");
+    }, 4000);
+  }
+
+  // 規格按鈕綁定
+  document.querySelectorAll("[data-spec-trigger]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const card = btn.closest(".product-card");
+      if (!card || !specDialog) return;
+
+      document.getElementById("modal-category").textContent = card.dataset.category.toUpperCase() + " / " + card.dataset.sku;
+      document.getElementById("modal-title").textContent = card.dataset.name;
+      document.getElementById("modal-desc").textContent = card.querySelector(".product-desc")?.textContent || "";
+      document.getElementById("modal-details").textContent = card.dataset.details || "無詳細技術數據";
+      document.getElementById("modal-sku").textContent = "H/U · " + card.dataset.sku;
+
+      specDialog.showModal();
+    });
+  });
+
+  // 採購按鈕綁定（以 BTC 扣款計算，正常商品頁面初始額度 0 BTC）
+  let currentBalance = parseInt("{{ balance }}", 10) || 0;
+  const balanceEl = document.getElementById("user-balance");
+
+  document.querySelectorAll("[data-buy-trigger]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const card = btn.closest(".product-card");
+      if (!card) return;
+      const price = parseInt(card.dataset.price, 10) || 0;
+      const name = card.dataset.name;
+
+      if (currentBalance >= price) {
+        currentBalance -= price;
+        if (balanceEl) balanceEl.textContent = currentBalance.toLocaleString();
+        showToast(`✔ 採購成功！已扣除 ${price.toLocaleString()} BTC，[${name}] 交付金鑰已排入暗網佇列。`);
+      } else {
+        showToast(`✖ 餘額不足！需要 ${price.toLocaleString()} BTC，目前餘額為 ${currentBalance.toLocaleString()} BTC。`);
+      }
+    });
+  });
+
+  // 搜尋與篩選
+  const searchInput = document.getElementById("product-search");
+  const filterBtns = document.querySelectorAll(".filter-btn");
+  const sortSelect = document.getElementById("sort-order");
+  const container = document.getElementById("products-container");
+  const cards = Array.from(document.querySelectorAll(".product-card"));
+  const countEl = document.getElementById("product-count");
+  const emptyEl = document.getElementById("no-products-msg");
+
+  let activeCategory = "all";
+  let searchQuery = "";
+
+  function updateView() {
+    let visibleCount = 0;
+    const q = searchQuery.toLowerCase().trim();
+
+    cards.forEach(card => {
+      const cat = card.dataset.category;
+      const sku = card.dataset.sku.toLowerCase();
+      const name = card.dataset.name.toLowerCase();
+      const desc = card.querySelector(".product-desc")?.textContent.toLowerCase() || "";
+
+      const matchesCat = (activeCategory === "all" || cat === activeCategory);
+      const matchesSearch = !q || (sku.includes(q) || name.includes(q) || desc.includes(q));
+
+      if (matchesCat && matchesSearch) {
+        card.style.display = "";
+        visibleCount++;
+      } else {
+        card.style.display = "none";
+      }
+    });
+
+    if (countEl) countEl.textContent = visibleCount;
+    if (emptyEl) emptyEl.style.display = visibleCount === 0 ? "block" : "none";
+  }
+
+  function sortCards() {
+    const mode = sortSelect.value;
+    const sorted = [...cards].sort((a, b) => {
+      const priceA = parseInt(a.dataset.price, 10);
+      const priceB = parseInt(b.dataset.price, 10);
+      const ratingA = parseFloat(a.dataset.rating);
+      const ratingB = parseFloat(b.dataset.rating);
+
+      if (mode === "price-asc") return priceA - priceB;
+      if (mode === "price-desc") return priceB - priceA;
+      if (mode === "rating-desc") return ratingB - ratingA;
+      return 0; // featured default
+    });
+
+    sorted.forEach(card => container.appendChild(card));
+  }
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      filterBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeCategory = btn.dataset.filter;
+      updateView();
+    });
+  });
+
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      searchQuery = e.target.value;
+      updateView();
+    });
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener("change", () => {
+      sortCards();
+      updateView();
+    });
+  }
+})();
+</script>
+{% endblock %}

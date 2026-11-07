@@ -1,0 +1,141 @@
+[
+  {
+    "id": "HU-PRD-001",
+    "sku": "HU-EXP-0881",
+    "category": "漏洞情報",
+    "category_slug": "exploit",
+    "name": "Hydra-0Day: 核心提權漏洞包",
+    "name_en": "Zero-Day Linux Kernel LPE Bundle",
+    "security_tag": "CRITICAL 9.8",
+    "price": 4800,
+    "original_price": 6000,
+    "stock": "僅剩 2 份",
+    "stock_status": "stock-low",
+    "icon": "⚡",
+    "rating": 4.9,
+    "description": "針對 Linux 6.x 核心的全新本機提權利用鏈（Local Privilege Escalation），附帶記憶體屏障繞過、KASLR 解算及穩定 PoC 驗證碼。",
+    "specs": [
+      "支援核心: 5.15 - 6.8",
+      "攻擊向量: Local",
+      "可靠性: 99.4%",
+      "交付: GPG 雙密鑰加密"
+    ],
+    "details": "此漏洞包利用內核 eBPF 子系統與匿名頁面映射競爭條件，在未特權用戶空間獲得 root 權限。包含自動化編譯腳本與防偵測內聯彙編載入器。"
+  },
+  {
+    "id": "HU-PRD-002",
+    "sku": "HU-HW-0219",
+    "category": "硬體金鑰",
+    "category_slug": "hardware",
+    "name": "暗影信號硬體調製解調器",
+    "name_en": "ShadowSignal Hardware Modchip",
+    "security_tag": "PHYSICAL",
+    "price": 2350,
+    "original_price": 2800,
+    "stock": "庫存 7 件",
+    "stock_status": "stock-normal",
+    "icon": "⟠",
+    "rating": 4.8,
+    "description": "微型化物理注入設備，具備主動阻斷偵測與韌體簽章欺騙功能，專門用於繞過企業級周邊驗證門禁與 TPM 信任鏈。",
+    "specs": [
+      "頻率: 433/868/915 MHz",
+      "介面: USB-C / JTAG",
+      "防溯源: 自毀熔絲",
+      "核心架構: RISC-V Custom"
+    ],
+    "details": "內建雙獨立 RF 通訊天線與電壓故障注入（Fault Injection）單元，可直接對目標微控制器注入電壓突波使加密校驗返回 True。"
+  },
+  {
+    "id": "HU-PRD-003",
+    "sku": "HU-DAT-9904",
+    "category": "資料情報",
+    "category_slug": "data",
+    "name": "Project Titan 企業洩漏資料庫",
+    "name_en": "Enterprise Identity & Vault Dump",
+    "security_tag": "CONFIDENTIAL",
+    "price": 7200,
+    "original_price": 8500,
+    "stock": "獨家 1 份",
+    "stock_status": "stock-low",
+    "icon": "▤",
+    "rating": 5.0,
+    "description": "全球頂級資安金控內部遭滲透萃取之憑證封裝，包含 2,400,000 組雜湊資料、內部 API 令牌及未發布拓撲架構圖。",
+    "specs": [
+      "大小: 48.6 GB",
+      "格式: SQLite / JSONL",
+      "雜湊類型: Argon2id",
+      "含明文備註: 8.2%"
+    ],
+    "details": "資料萃取自其內部 AD 域控與 LDAP 複製流量，包含多名 C-Level 管理層之私鑰備份與內部代號清單，極具情報價值。"
+  },
+  {
+    "id": "HU-PRD-004",
+    "sku": "HU-TLS-3312",
+    "category": "滲透工具",
+    "category_slug": "tool",
+    "name": "幽靈指令自動化 C2 框架",
+    "name_en": "Phantom C2 Command Infrastructure",
+    "security_tag": "STEALTH PRO",
+    "price": 3600,
+    "original_price": 4200,
+    "stock": "現貨充足",
+    "stock_status": "stock-normal",
+    "icon": "◈",
+    "rating": 4.7,
+    "description": "新一代抗沙盒混淆遠端命令與控制框架。支援 DNS-over-HTTPS 與 WebSocket 動態隱寫管道，完全穿透主流 EDR。",
+    "specs": [
+      "模組數: 64+",
+      "特徵隱匿: 動態變異",
+      "協議: DoH / WS / QUIC",
+      "支援平台: Win/Linux/macOS"
+    ],
+    "details": "載荷採用多態變形引擎每次連線重構 shellcode，自帶記憶體中直接加載 PE / ELF 的 Reflective Loader，無落盤行為。"
+  },
+  {
+    "id": "HU-PRD-005",
+    "sku": "HU-NET-5021",
+    "category": "網路節點",
+    "category_slug": "relay",
+    "name": "深網多重跳板中繼 VIP 節點",
+    "name_en": "Multi-Hop Fast-Flux Relay Node",
+    "security_tag": "ZERO-LOG",
+    "price": 850,
+    "original_price": 1100,
+    "stock": "剩餘 5 席",
+    "stock_status": "stock-normal",
+    "icon": "⌁",
+    "rating": 4.9,
+    "description": "貫穿 12 個無引渡協議管轄區的快速變換 IP 路由鏈。RAM 暫存即寫即消機制，保證連線發起方絕對零軌跡。",
+    "specs": [
+      "跳點數: 7 節點混淆",
+      "頻寬: 10 Gbps 專線",
+      "日誌策略: RAM 實體斷電無痕",
+      "切換延遲: < 40ms"
+    ],
+    "details": "部署於抗扣押數據中心，節點每隔 180 秒自動置換出口 IP，底層採用 WireGuard 封包與偽裝 TLS 1.3 流量隧道混淆。"
+  },
+  {
+    "id": "HU-PRD-006",
+    "sku": "HU-TLS-7709",
+    "category": "滲透工具",
+    "category_slug": "tool",
+    "name": "自動化憑證爆破與字典矩陣",
+    "name_en": "Automated Credential Fuzzer Suite",
+    "security_tag": "UTILITY",
+    "price": 1500,
+    "original_price": 1900,
+    "stock": "現貨充足",
+    "stock_status": "stock-normal",
+    "icon": "⚙",
+    "rating": 4.6,
+    "description": "整合機器學習語義變形之高併發認證測試套件，內置針對地下論壇與特權管理員常用的 1,200 萬筆密碼規則庫。",
+    "specs": [
+      "速率: 45,000 req/s",
+      "限速繞過: 自適應 IP 輪換",
+      "協議: HTTP/SSH/RDP",
+      "擴充: Python & Go SDK"
+    ],
+    "details": "支援自定義回應規則特徵識別、WAF 繞過編碼模組，以及基於目標目標資訊自適應生成高命中率之社工字典。"
+  }
+]
+
