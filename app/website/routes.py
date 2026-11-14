@@ -1,31 +1,28 @@
 import json
+import math
 from pathlib import Path
-from flask import Blueprint, jsonify, render_template
+from flask import Blueprint, jsonify, render_template, request
 
 website_bp = Blueprint("website", __name__, url_prefix="/site")
 
 
 def load_products() -> list[dict]:
-    """從 products-example.json 檔案動態讀取商品資料清單。"""
-    candidate_files = [
-        "products-example.json",
-        "products.json",
+    """優先從 app/data/products.json 動態讀取商品資料清單。"""
+    candidate_paths = [
+        Path(__file__).resolve().parent.parent / "data" / "products.json",
+        Path(__file__).resolve().parent.parent / "data" / "products-example.json",
+        Path(__file__).resolve().parent.parent.parent / "products.json",
+        Path(__file__).resolve().parent.parent.parent / "products-example.json",
     ]
-    candidate_dirs = [
-        Path(__file__).resolve().parent.parent.parent,
-        Path(__file__).resolve().parent.parent / "data",
-    ]
-    for filename in candidate_files:
-        for directory in candidate_dirs:
-            path = directory / filename
-            if path.is_file():
-                try:
-                    with open(path, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                        if data:
-                            return data
-                except Exception:
-                    pass
+    for path in candidate_paths:
+        if path.is_file():
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if data:
+                        return data
+            except Exception:
+                pass
     return []
 
 
@@ -68,4 +65,19 @@ def products():
 
 @website_bp.get("/api/products")
 def api_products():
-    return jsonify(load_products())
+    items = load_products()
+    page = request.args.get("page", type=int)
+    per_page = request.args.get("per_page", default=9, type=int)
+    if page is not None and page > 0:
+        total = len(items)
+        total_pages = math.ceil(total / per_page) if per_page > 0 else 1
+        start = (page - 1) * per_page
+        end = start + per_page
+        return jsonify({
+            "items": items[start:end],
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+            "total_pages": total_pages,
+        })
+    return jsonify(items)

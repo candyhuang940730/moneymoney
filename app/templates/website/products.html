@@ -46,12 +46,12 @@
         <span class="status-dot"></span> 受邀者節點已授權
         <!-- <span class="system-separator">/</span> 存取級別: {% if is_admin %}<strong style="color: #ebd188;">TIER-ROOT (ADMIN)</strong>{% else %}TIER-2 (USER){% endif %} -->
         <span class="system-separator">/</span> 存取級別: TIER-2 (USER)
-        <span class="system-separator">/</span> 資料來源: <strong style="color: var(--green);">products-example.json</strong>
+        <span class="system-separator">/</span> 資料來源: <strong style="color: var(--green);">app/data/products.json</strong>
         <span class="system-separator">/</span> 結算代幣: <strong>BTC</strong>
       </div>
       <p class="eyebrow">第二章 / 資本累積 · 黑市目錄</p>
       <h1 id="marketplace-title">地下資產清單。<br><span>未授權者無法追蹤的流通標的。</span></h1>
-      <p class="intro-copy">此頁面由後端動態讀取 <code>products-example.json</code> 資料檔案以呈現 Hydra 組織內部流通販售的特權模組、實體金鑰與外洩憑證。所有物品均以比特幣（BTC）結算，初始資金為 0 BTC。</p>
+      <p class="intro-copy">此頁面由後端動態讀取 <code>app/data/products.json</code> 資料檔案以呈現 Hydra 組織內部流通販售的特權模組、實體金鑰與外洩憑證。所有物品均以比特幣（BTC）結算，初始資金為 0 BTC。</p>
     </section>
 
     <!-- 工具列：搜尋、分類篩選、排序 -->
@@ -83,9 +83,9 @@
       </div>
     </section>
 
-    <!-- 商品卡片列表 -->
+    <!-- 商品卡片列表 (每頁 9 筆，共 3 頁 / 27 筆商品) -->
     <section class="products-grid" id="products-container" aria-label="黑市商品卡片清單">
-      {% for item in products %}
+      {% for item in products[:9] %}
       <article
         class="product-card"
         data-id="{{ item.id }}"
@@ -145,11 +145,31 @@
     <div id="no-products-msg" class="products-empty" style="display: none;">
       <p>⌁ 未尋獲符合篩選條件的商品節點。請更換關鍵字或選擇其他分類。</p>
     </div>
+
+    <!-- 分頁導航列 (每頁 9 筆，共 3 頁 / 27 筆商品，切換分頁僅動態刷新商品網格區域) -->
+    <nav class="pagination-container" id="pagination-nav" aria-label="商品分頁導航">
+      <div class="page-info" id="pagination-info">
+        第 <strong id="current-page-num">1</strong> / <strong id="total-pages-num">3</strong> 頁 · 顯示第 <strong id="page-range">1 - 9</strong> 筆 / 共 <strong id="total-items-num">{{ products|length }}</strong> 筆上架標的
+      </div>
+      <div class="pagination-controls" id="pagination-controls">
+        <button class="page-btn page-btn-nav" id="btn-prev-page" type="button" aria-label="上一頁" disabled>
+          ‹ 上一頁
+        </button>
+        <div class="page-numbers" id="page-numbers-container">
+          <button class="page-btn active" type="button" data-page="1">1</button>
+          <button class="page-btn" type="button" data-page="2">2</button>
+          <button class="page-btn" type="button" data-page="3">3</button>
+        </div>
+        <button class="page-btn page-btn-nav" id="btn-next-page" type="button" aria-label="下一頁">
+          下一頁 ›
+        </button>
+      </div>
+    </nav>
   </main>
 
   <footer class="site-footer">
     <span>HYDRA UNDERGROUND / 第二章 · 資本累積</span>
-    <span>結算貨幣：BTC · 資料來源：products-example.json · 本機授權資安教學靶場 · 所有內容均為虛構</span>
+    <span>結算貨幣：BTC · 資料來源：products-example.json · 每頁 9 筆 (共 3 頁) · 本機授權資安教學靶場 · 所有內容均為虛構</span>
   </footer>
 </div>
 
@@ -213,6 +233,11 @@
 {% endblock %}
 
 {% block scripts %}
+<!-- 伺服器傳遞之 JSON 商品資料（使用 application/json 標籤封裝，避免編輯器誤將 Jinja 模板標籤識別為 JS 語法錯誤） -->
+<script id="products-json-data" type="application/json">
+{{ products|tojson }}
+</script>
+
 <script>
 (() => {
   // 簡報 Dialog
@@ -248,29 +273,220 @@
     }, 4000);
   }
 
-  // 規格按鈕綁定
-  document.querySelectorAll("[data-spec-trigger]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const card = btn.closest(".product-card");
-      if (!card || !specDialog) return;
+  // 比特幣帳戶餘額（正常商品頁面初始額度 0 BTC）
+  let currentBalance = parseInt("{{ balance }}", 10) || 0;
+  const balanceEl = document.getElementById("user-balance");
 
+  // DOM 容器與控制項
+  const container = document.getElementById("products-container");
+  const countEl = document.getElementById("product-count");
+  const emptyEl = document.getElementById("no-products-msg");
+  const searchInput = document.getElementById("product-search");
+  const filterBtns = document.querySelectorAll(".filter-btn");
+  const sortSelect = document.getElementById("sort-order");
+
+  // 分頁 DOM 元素
+  const paginationNav = document.getElementById("pagination-nav");
+  const currentPageNum = document.getElementById("current-page-num");
+  const totalPagesNum = document.getElementById("total-pages-num");
+  const pageRange = document.getElementById("page-range");
+  const totalItemsNum = document.getElementById("total-items-num");
+  const btnPrev = document.getElementById("btn-prev-page");
+  const btnNext = document.getElementById("btn-next-page");
+  const pageNumbersContainer = document.getElementById("page-numbers-container");
+
+  // 全站商品資料（從 application/json 標籤安全解析，兼具語法純淨度與編輯器相容性）
+  const productsDataEl = document.getElementById("products-json-data");
+  const allProducts = productsDataEl ? JSON.parse(productsDataEl.textContent || "[]") : [];
+  const ITEMS_PER_PAGE = 9;
+  let currentPage = 1;
+  let filteredProducts = [...allProducts];
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function buildCardHtml(item) {
+    const isCritical = (item.security_tag || "").includes("CRITICAL") || (item.security_tag || "").includes("CONFIDENTIAL");
+    const specsHtml = (item.specs || []).map(s => `<li class="product-spec-pill">${escapeHtml(s)}</li>`).join("");
+
+    return `
+      <article
+        class="product-card"
+        data-id="${escapeHtml(item.id)}"
+        data-sku="${escapeHtml(item.sku)}"
+        data-category="${escapeHtml(item.category_slug)}"
+        data-name="${escapeHtml(item.name)}"
+        data-price="${item.price}"
+        data-rating="${item.rating}"
+        data-details="${escapeHtml(item.details || '')}"
+      >
+        <div class="product-card-top">
+          <span class="product-sku">${escapeHtml(item.sku)}</span>
+          <span class="product-category-badge category-${escapeHtml(item.category_slug)}">${escapeHtml(item.category)}</span>
+        </div>
+        <div class="product-card-visual" aria-hidden="true">
+          <span class="card-security-tag ${isCritical ? 'critical' : ''}">${escapeHtml(item.security_tag)}</span>
+          <span class="card-visual-icon">${escapeHtml(item.icon)}</span>
+        </div>
+        <div class="product-card-body">
+          <h2 class="product-title">${escapeHtml(item.name)}</h2>
+          <div class="product-subtitle">${escapeHtml(item.name_en)}</div>
+          <p class="product-desc">${escapeHtml(item.description)}</p>
+          <ul class="product-specs-list" aria-label="技術規格摘要">
+            ${specsHtml}
+          </ul>
+          <div class="product-card-pricing">
+            <div class="price-box">
+              <span class="price-main">${item.price.toLocaleString()}</span>
+              <span class="price-currency">BTC</span>
+              <span class="price-orig">${item.original_price.toLocaleString()}</span>
+            </div>
+            <div class="stock-indicator ${escapeHtml(item.stock_status || '')}">
+              <span class="status-dot"></span>
+              <span>${escapeHtml(item.stock)}</span>
+            </div>
+          </div>
+          <div class="product-card-actions">
+            <button class="btn-specs" type="button" data-spec-trigger="${escapeHtml(item.id)}">檢視規格</button>
+            <button class="btn-buy" type="button" data-buy-trigger="${escapeHtml(item.id)}">立即採購 <span aria-hidden="true">↗</span></button>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
+  // 嘗試透過 AJAX 端點載入指定分頁商品資料，若失敗則無縫退回前端陣列切片
+  async function fetchPageData(page) {
+    // 若有自訂關鍵字搜尋或非全部分類，以本地過濾陣列進行精準切片
+    const hasActiveFilters = activeCategory !== "all" || searchQuery.trim() !== "" || (sortSelect && sortSelect.value !== "featured");
+    if (!hasActiveFilters) {
+      try {
+        const resp = await fetch(`/site/api/products?page=${page}&per_page=${ITEMS_PER_PAGE}`);
+        if (resp.ok) {
+          const result = await resp.json();
+          if (result && Array.isArray(result.items)) {
+            return result.items;
+          }
+        }
+      } catch (_) {
+        // AJAX 離線或被阻擋時直接使用記憶體陣列
+      }
+    }
+    const startIndex = (page - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }
+
+  // 動態更新商品網格與分頁列（切換分頁時僅動態更新商品網格 section，不刷新整個網頁）
+  async function renderCurrentPage(smoothScroll = false) {
+    const totalItems = filteredProducts.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    if (totalItems === 0) {
+      container.innerHTML = "";
+      if (emptyEl) emptyEl.style.display = "block";
+      if (paginationNav) paginationNav.style.display = "none";
+      if (countEl) countEl.textContent = "0";
+      return;
+    }
+
+    if (emptyEl) emptyEl.style.display = "none";
+    if (paginationNav) paginationNav.style.display = "flex";
+    if (countEl) countEl.textContent = totalItems;
+
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+
+    // 透過 AJAX / 前端快速取得該頁的 9 筆商品資料
+    const pageItems = await fetchPageData(currentPage);
+
+    // 僅動態更新商品網格區域 (product grid section)，不影響其餘任何網頁區塊
+    container.innerHTML = pageItems.map(buildCardHtml).join("");
+
+    // 更新分頁狀態資訊
+    if (currentPageNum) currentPageNum.textContent = currentPage;
+    if (totalPagesNum) totalPagesNum.textContent = totalPages;
+    if (pageRange) pageRange.textContent = `${startIndex + 1} - ${endIndex}`;
+    if (totalItemsNum) totalItemsNum.textContent = totalItems;
+
+    // 更新上一頁 / 下一頁按鈕狀態
+    if (btnPrev) btnPrev.disabled = (currentPage === 1);
+    if (btnNext) btnNext.disabled = (currentPage === totalPages);
+
+    // 生成頁碼按鈕 (例如第 1、2、3 頁)
+    if (pageNumbersContainer) {
+      pageNumbersContainer.innerHTML = "";
+      for (let p = 1; p <= totalPages; p++) {
+        const pageBtn = document.createElement("button");
+        pageBtn.type = "button";
+        pageBtn.className = "page-btn" + (p === currentPage ? " active" : "");
+        pageBtn.textContent = p;
+        pageBtn.setAttribute("aria-label", `前往第 ${p} 頁`);
+        pageBtn.addEventListener("click", () => {
+          if (currentPage !== p) {
+            currentPage = p;
+            renderCurrentPage(true);
+          }
+        });
+        pageNumbersContainer.appendChild(pageBtn);
+      }
+    }
+
+    if (smoothScroll) {
+      const toolbar = document.querySelector(".products-toolbar");
+      if (toolbar) {
+        toolbar.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }
+
+  // 監聽上一頁 / 下一頁按鈕
+  if (btnPrev) {
+    btnPrev.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderCurrentPage(true);
+      }
+    });
+  }
+
+  if (btnNext) {
+    btnNext.addEventListener("click", () => {
+      const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderCurrentPage(true);
+      }
+    });
+  }
+
+  // 規格按鈕與採購按鈕（事件委託在 container 上，動態換頁後皆能正常觸發）
+  container.addEventListener("click", (e) => {
+    const specBtn = e.target.closest("[data-spec-trigger]");
+    if (specBtn && specDialog) {
+      const card = specBtn.closest(".product-card");
+      if (!card) return;
       document.getElementById("modal-category").textContent = card.dataset.category.toUpperCase() + " / " + card.dataset.sku;
       document.getElementById("modal-title").textContent = card.dataset.name;
       document.getElementById("modal-desc").textContent = card.querySelector(".product-desc")?.textContent || "";
       document.getElementById("modal-details").textContent = card.dataset.details || "無詳細技術數據";
       document.getElementById("modal-sku").textContent = "H/U · " + card.dataset.sku;
-
       specDialog.showModal();
-    });
-  });
+      return;
+    }
 
-  // 採購按鈕綁定（以 BTC 扣款計算，正常商品頁面初始額度 0 BTC）
-  let currentBalance = parseInt("{{ balance }}", 10) || 0;
-  const balanceEl = document.getElementById("user-balance");
-
-  document.querySelectorAll("[data-buy-trigger]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const card = btn.closest(".product-card");
+    const buyBtn = e.target.closest("[data-buy-trigger]");
+    if (buyBtn) {
+      const card = buyBtn.closest(".product-card");
       if (!card) return;
       const price = parseInt(card.dataset.price, 10) || 0;
       const name = card.dataset.name;
@@ -282,61 +498,47 @@
       } else {
         showToast(`✖ 餘額不足！需要 ${price.toLocaleString()} BTC，目前餘額為 ${currentBalance.toLocaleString()} BTC。`);
       }
-    });
+    }
   });
 
-  // 搜尋與篩選
-  const searchInput = document.getElementById("product-search");
-  const filterBtns = document.querySelectorAll(".filter-btn");
-  const sortSelect = document.getElementById("sort-order");
-  const container = document.getElementById("products-container");
-  const cards = Array.from(document.querySelectorAll(".product-card"));
-  const countEl = document.getElementById("product-count");
-  const emptyEl = document.getElementById("no-products-msg");
-
+  // 搜尋與篩選邏輯
   let activeCategory = "all";
   let searchQuery = "";
 
-  function updateView() {
-    let visibleCount = 0;
+  function applyFilterAndSearch() {
     const q = searchQuery.toLowerCase().trim();
 
-    cards.forEach(card => {
-      const cat = card.dataset.category;
-      const sku = card.dataset.sku.toLowerCase();
-      const name = card.dataset.name.toLowerCase();
-      const desc = card.querySelector(".product-desc")?.textContent.toLowerCase() || "";
-
-      const matchesCat = (activeCategory === "all" || cat === activeCategory);
+    filteredProducts = allProducts.filter(item => {
+      const matchesCat = (activeCategory === "all" || item.category_slug === activeCategory);
+      const sku = (item.sku || "").toLowerCase();
+      const name = (item.name || "").toLowerCase();
+      const desc = (item.description || "").toLowerCase();
       const matchesSearch = !q || (sku.includes(q) || name.includes(q) || desc.includes(q));
-
-      if (matchesCat && matchesSearch) {
-        card.style.display = "";
-        visibleCount++;
-      } else {
-        card.style.display = "none";
-      }
+      return matchesCat && matchesSearch;
     });
 
-    if (countEl) countEl.textContent = visibleCount;
-    if (emptyEl) emptyEl.style.display = visibleCount === 0 ? "block" : "none";
+    applySorting(false);
+    currentPage = 1; // 篩選/搜尋變更時切回第 1 頁
+    renderCurrentPage(false);
   }
 
-  function sortCards() {
-    const mode = sortSelect.value;
-    const sorted = [...cards].sort((a, b) => {
-      const priceA = parseInt(a.dataset.price, 10);
-      const priceB = parseInt(b.dataset.price, 10);
-      const ratingA = parseFloat(a.dataset.rating);
-      const ratingB = parseFloat(b.dataset.rating);
+  function applySorting(triggerRender = true) {
+    const mode = sortSelect ? sortSelect.value : "featured";
+    if (mode === "price-asc") {
+      filteredProducts.sort((a, b) => a.price - b.price);
+    } else if (mode === "price-desc") {
+      filteredProducts.sort((a, b) => b.price - a.price);
+    } else if (mode === "rating-desc") {
+      filteredProducts.sort((a, b) => b.rating - a.rating);
+    } else {
+      // 依原始清單順序
+      const idOrder = new Map(allProducts.map((it, idx) => [it.id, idx]));
+      filteredProducts.sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0));
+    }
 
-      if (mode === "price-asc") return priceA - priceB;
-      if (mode === "price-desc") return priceB - priceA;
-      if (mode === "rating-desc") return ratingB - ratingA;
-      return 0; // featured default
-    });
-
-    sorted.forEach(card => container.appendChild(card));
+    if (triggerRender) {
+      renderCurrentPage(false);
+    }
   }
 
   filterBtns.forEach(btn => {
@@ -344,23 +546,25 @@
       filterBtns.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       activeCategory = btn.dataset.filter;
-      updateView();
+      applyFilterAndSearch();
     });
   });
 
   if (searchInput) {
     searchInput.addEventListener("input", (e) => {
       searchQuery = e.target.value;
-      updateView();
+      applyFilterAndSearch();
     });
   }
 
   if (sortSelect) {
     sortSelect.addEventListener("change", () => {
-      sortCards();
-      updateView();
+      applySorting(true);
     });
   }
+
+  // 初始化分頁顯示（第 1 頁，共 3 頁 / 27 筆商品）
+  renderCurrentPage(false);
 })();
 </script>
 {% endblock %}
