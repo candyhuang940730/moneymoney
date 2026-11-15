@@ -37,9 +37,16 @@
     <section class="login-column" aria-labelledby="login-title">
       <div class="login-panel">
         <div class="panel-topline"><span class="panel-index">01 / 身分驗證</span><span class="panel-lock" aria-hidden="true">◇</span></div>
+        {% if current_user %}
+        <div class="panel-heading"><p class="eyebrow">身分驗證完成</p><h2 id="login-title">通道已開啟</h2><p>歡迎回來，{{ current_user["UserName"] }}。</p></div>
+        <p class="form-note"><span class="status-dot"></span> 已登入地下網站；商品頁待後續串接。</p>
+        <form class="login-form" method="post" action="{{ url_for('website.logout') }}">
+          <button class="submit-button" type="submit">登出地下網站 <span aria-hidden="true">↗</span></button>
+        </form>
+        {% else %}
         <div class="panel-heading"><p class="eyebrow">僅限受邀者</p><h2 id="login-title">登入地下網路</h2><p>使用你取得的受邀帳號進入。此處不提供公開註冊。</p></div>
 
-        <form class="login-form" method="post" action="/site/login" aria-describedby="login-note">
+        <form class="login-form" method="post" action="{{ url_for('website.login') }}" aria-describedby="login-note">
           <label for="username">帳號識別碼</label>
           <input id="username" name="username" type="text" autocomplete="username" placeholder="輸入帳號" required>
 
@@ -47,12 +54,13 @@
           <input id="password" name="password" type="password" autocomplete="current-password" placeholder="輸入密碼" required>
 
           <p id="login-note" class="form-note"><span class="status-dot"></span> 此節點僅接受持有邀請身分的使用者。</p>
-          <div class="form-feedback" role="status" aria-live="polite" hidden></div>
+          <div class="form-feedback" role="status" aria-live="polite" {% if not login_error %}hidden{% endif %}>{{ login_error or "" }}</div>
           <button class="submit-button" type="submit">驗證身分 <span aria-hidden="true">↗</span></button>
         </form>
+        {% endif %}
         <div class="panel-footer"><span>安全通道 / H-U-LOGIN</span><span>拒絕未授權連線</span></div>
       </div>
-      <p class="login-aside">沒有受邀身分？<span>地下網路不接受公開申請。</span></p>
+      {% if not current_user %}<p class="login-aside">沒有受邀身分？<span>地下網路不接受公開申請。</span></p>{% endif %}
     </section>
   </main>
 

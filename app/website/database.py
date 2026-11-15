@@ -1,18 +1,22 @@
 import sqlite3
 from pathlib import Path
 from werkzeug.security import generate_password_hash,check_password_hash
-class database:
-    def __init__(self):
-        self.db_path = Path(__file__).parent/"data/hydra_db.sqlite3"
-        self.init_db()
-        self.set_data_row()
-        pass
-    def init_db(self):
-        db_path = self.db_path
+from contextlib import closing
+from flask import g
+class Database:
+    def __init__(self,db_path,schema_path):
+        self.db_path = db_path
+        self.schema_path = schema_path
+    def initialize_db(self):
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self.db = sqlite3.connect(db_path)
-        schema_path = Path(__file__).parent / "schema.sql"
-        self.db.executescript(schema_path.read_text(encoding="utf-8"))
+        with closing(sqlite3.connect(self.db_path)) as conn:
+            conn.executescript(self.schema_path.read_text(encoding="utf-8"))
+            conn.commit()
+    def connection(self):
+        if "hydra_conn" not in g:
+            g.hydra_conn = sqlite3.connect(self.db_path)
+            g.hydra_conn.row_factory = sqlite3.Row
+        return g.hydra_conn
 
     def verify_user(self, username, password):
         user = self.search_by_username(username)
@@ -23,25 +27,31 @@ class database:
         return user
 
     def search_by_id(self,id):
-        sql = "SELECT * FROM users WHERE id = ?"
-        data = self.db.execute(sql,(id,)).fetchone()
+        sql = """SELECT id, UserName, is_active, is_admin, user_role
+        FROM users 
+        WHERE id = ?
+        """
+        db = self.connection()
+        data = db.execute(sql,(id,)).fetchone()
         return data
 
     def search_by_username(self,username):
         sql = "SELECT * FROM users WHERE UserName = ?"
-        data = self.db.execute(sql,(username,)).fetchone()
+        db = self.connection()
+        data = db.execute(sql,(username,)).fetchone()
         return data
 
     #完成後回傳id
     def set_user(self,username,password):
         sql_syntax = "INSERT INTO users (username, password_hash) VALUES (?, ?)"
+        db = self.connection()
         password_hash = generate_password_hash(password)
-        result = self.db.execute(sql_syntax,(username, password_hash))
-        self.db.commit()
+        result = db.execute(sql_syntax,(username, password_hash))
+        db.commit()
         return result.lastrowid
 
-    def set_data_row(self):
-        self.db.row_factory = sqlite3.Row
 
-    def close_db(self):
-        self.db.close()
+    def close_connection(self, error=None):
+        conn = g.pop("hydra_conn", None)
+        if conn is not None:
+            conn.close()
