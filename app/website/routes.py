@@ -1,9 +1,8 @@
 import json
 import math
 from pathlib import Path
-from flask import Blueprint, jsonify, render_template, request
-
-website_bp = Blueprint("website", __name__, url_prefix="/site")
+from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
+from app.website.database import Database
 
 
 def load_products() -> list[dict]:
@@ -26,58 +25,73 @@ def load_products() -> list[dict]:
     return []
 
 
-@website_bp.get("/")
-def index():
-    return render_template("website/login.html")
+def create_website_blueprint(db: Database):
+    website_bp = Blueprint("website", __name__, url_prefix="/site")
 
+    def load_site_user():
+        user_id = session.get("site_user_id")
+        if user_id is None:
+            return None
 
-# 依需求移除由登入頁面直接導向商品頁的路由，保留原始登入頁規範
-# （登入與身分驗證留待後續章節實作，不直接放行至商品頁）
+        user = db.search_by_id(user_id)
+        if user is None or not user["is_active"]:
+            session.pop("site_user_id", None)
+            return None
+        return user
 
+    @website_bp.get("/")
+    def index():
+        return render_template("website/login.html", current_user=load_site_user())
 
-@website_bp.route("/products", methods=["GET", "POST"])
-def products():
-    # 讀取範例檔案商品資料
-    items = load_products()
+    @website_bp.post("/login")
+    def login():
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        result = db.verify_user(username, password)
+        if result is None:
+            return render_template(
+                "website/login.html",
+                login_error="帳號或密碼錯誤",
+            ), 401
 
-    # --- 身分檢查與切換邏輯（已依需求註解，僅展示一般正常商品頁面）---
-    # target_role = request.args.get("role", "").lower()
-    # target_user = request.args.get("user", "").lower()
-    # if target_role == "admin" or target_user == "admin":
-    #     session["user"] = "admin"
-    #     session["is_admin"] = True
-    #     session["balance"] = 60000
-    # elif target_role in ("guest", "user") or target_user in ("guest", "user"):
-    #     session["user"] = "guest"
-    #     session["is_admin"] = False
-    #     session["balance"] = 0
-    # ------------------------------------------------------------------
+        session.clear()
+        session["site_user_id"] = result["id"]
+        return redirect(url_for("website.index"))
 
-    # 正常商品頁面初始餘額為 0 BTC
-    balance = 0
+    @website_bp.post("/logout")
+    def logout():
+        session.pop("site_user_id", None)
+        return redirect(url_for("website.index"))
 
-    return render_template(
-        "website/products.html",
-        products=items,
-        balance=balance,
-    )
+    # 商品清單頁面（BTC 計價，正常商品頁面初始 0 BTC）
+    @website_bp.route("/products", methods=["GET", "POST"])
+    def products():
+        items = load_products()
+        balance = 0
+        return render_template(
+            "website/products.html",
+            products=items,
+            balance=balance,
+        )
 
+    # 商品 AJAX 分頁 API
+    @website_bp.get("/api/products")
+    def api_products():
+        items = load_products()
+        page = request.args.get("page", type=int)
+        per_page = request.args.get("per_page", default=9, type=int)
+        if page is not None and page > 0:
+            total = len(items)
+            total_pages = math.ceil(total / per_page) if per_page > 0 else 1
+            start = (page - 1) * per_page
+            end = start + per_page
+            return jsonify({
+                "items": items[start:end],
+                "page": page,
+                "per_page": per_page,
+                "total": total,
+                "total_pages": total_pages,
+            })
+        return jsonify(items)
 
-@website_bp.get("/api/products")
-def api_products():
-    items = load_products()
-    page = request.args.get("page", type=int)
-    per_page = request.args.get("per_page", default=9, type=int)
-    if page is not None and page > 0:
-        total = len(items)
-        total_pages = math.ceil(total / per_page) if per_page > 0 else 1
-        start = (page - 1) * per_page
-        end = start + per_page
-        return jsonify({
-            "items": items[start:end],
-            "page": page,
-            "per_page": per_page,
-            "total": total,
-            "total_pages": total_pages,
-        })
-    return jsonify(items)
+    return website_bp
