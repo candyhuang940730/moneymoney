@@ -7,7 +7,7 @@
 本專案的 Python 依賴記錄在 `environment.yml`。請由環境使用者自行執行：
 
 ```cmd
-cd /d "C:\Users\Computer\Documents\CTF\moneymoney"
+cd /d "C:\Users\your_computer_mame\Documents\CTF\moneymoney"
 conda env create -f environment.yml
 conda activate hydra-underground
 python -m flask --app app run
