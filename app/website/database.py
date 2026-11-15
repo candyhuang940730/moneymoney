@@ -3,6 +3,11 @@ from pathlib import Path
 from werkzeug.security import generate_password_hash,check_password_hash
 from contextlib import closing
 from flask import g
+
+DEFAULT_ADMIN_USERNAME = "Admin_is_god"
+DEFAULT_ADMIN_PASSWORD = "god_789!@#"
+
+
 class Database:
     def __init__(self,db_path,schema_path):
         self.db_path = db_path
@@ -11,6 +16,19 @@ class Database:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         with closing(sqlite3.connect(self.db_path)) as conn:
             conn.executescript(self.schema_path.read_text(encoding="utf-8"))
+            admin_exists = conn.execute(
+                "SELECT 1 FROM users WHERE UserName = ?", (DEFAULT_ADMIN_USERNAME,)
+            ).fetchone()
+            if admin_exists is None:
+                conn.execute(
+                    """INSERT INTO users (UserName, password_hash, is_admin, is_active)
+                    VALUES (?, ?, 1, 1)
+                    ON CONFLICT(UserName) DO NOTHING""",
+                    (
+                        DEFAULT_ADMIN_USERNAME,
+                        generate_password_hash(DEFAULT_ADMIN_PASSWORD),
+                    ),
+                )
             conn.commit()
     def connection(self):
         if "hydra_conn" not in g:
