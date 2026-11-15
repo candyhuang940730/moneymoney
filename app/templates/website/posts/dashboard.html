@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+{% block title %}賣家管理中心｜Hydra Underground{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/posts.css') }}">
+
+<div class="page-shell">
+
+    <!-- 頂部導覽列 -->
+    <header class="site-header">
+        <a class="brand" href="{{ url_for('website.index') }}">
+            <span class="brand-mark">H<span>/</span>U</span>
+            <span class="brand-name">
+                HYDRA <strong>UNDERGROUND</strong>
+            </span>
+        </a>
+
+        <div class="header-actions">
+            <a class="header-link" href="{{ url_for('posts.post_list') }}">
+                市場貼文
+            </a>
+
+            <a class="header-link" href="{{ url_for('ctf_center.index') }}">
+                任務中心
+            </a>
+
+            <a class="header-link" href="{{ url_for('website.index') }}">
+                地下網站
+            </a>
+        </div>
+    </header>
+
+    <main class="seller-main">
+
+        <!-- 連線狀態 -->
+        <div class="seller-status">
+            <span class="status-dot"></span>
+            SELLER TERMINAL / CONTROL PANEL
+        </div>
+
+        <!-- Dashboard 標題 -->
+        <section class="seller-hero">
+            <p class="eyebrow">
+                HYDRA UNDERGROUND / SELLER CENTER
+            </p>
+
+            <h1>
+                賣家管理<br>
+                <span>控制中心。</span>
+            </h1>
+
+            <p class="seller-description">
+                歡迎回來，{{ seller }}。
+                在這裡管理你的賣家貼文與商品資訊。
+            </p>
+        </section>
+
+        <!-- 統計資訊 -->
+        <section class="dashboard-section">
+
+            <div class="dashboard-section-heading">
+                <p class="eyebrow">MARKET OVERVIEW</p>
+                <h2>貼文統計</h2>
+            </div>
+
+            <div class="dashboard-stats">
+
+                <div class="dashboard-stat-card">
+                    <span class="dashboard-stat-label">
+                        全部貼文
+                    </span>
+                    <strong>{{ counts.all }}</strong>
+                    <small>TOTAL POSTS</small>
+                </div>
+
+                <div class="dashboard-stat-card">
+                    <span class="dashboard-stat-label">
+                        上架中
+                    </span>
+                    <strong>{{ counts.active }}</strong>
+                    <small>ACTIVE LISTINGS</small>
+                </div>
+
+                <div class="dashboard-stat-card">
+                    <span class="dashboard-stat-label">
+                        已下架
+                    </span>
+                    <strong>{{ counts.inactive }}</strong>
+                    <small>INACTIVE LISTINGS</small>
+                </div>
+
+                <div class="dashboard-stat-card">
+                    <span class="dashboard-stat-label">
+                        草稿
+                    </span>
+                    <strong>{{ counts.draft }}</strong>
+                    <small>DRAFT POSTS</small>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 文章管理 -->
+        <section class="dashboard-section">
+
+            <div class="seller-section-header">
+
+                <div>
+                    <p class="eyebrow">
+                        SELLER INVENTORY
+                    </p>
+                    <h2>我的商品貼文</h2>
+                </div>
+
+                <a class="seller-button" href="{{ url_for('posts.create_post') }}">
+                    ＋ 新增貼文 ↗
+                </a>
+
+            </div>
+
+            <!-- 商品搜尋與排序 -->
+            <form class="dashboard-search-form" method="GET" action="{{ url_for('posts.seller_dashboard') }}">
+                <input type="hidden" name="status" value="{{ selected_status }}">
+
+                <input type="search" name="q" value="{{ keyword }}" placeholder="搜尋商品名稱或內容..." maxlength="100">
+
+                <select name="sort">
+                    <option value="newest" {% if selected_sort=="newest" %}selected{% endif %}>
+                        最新發布
+                    </option>
+
+                    <option value="oldest" {% if selected_sort=="oldest" %}selected{% endif %}>
+                        最舊發布
+                    </option>
+
+                    <option value="price_high" {% if selected_sort=="price_high" %}selected{% endif %}>
+                        價格由高到低
+                    </option>
+
+                    <option value="price_low" {% if selected_sort=="price_low" %}selected{% endif %}>
+                        價格由低到高
+                    </option>
+                </select>
+
+                <button type="submit" class="seller-button">
+                    搜尋 / 排序
+                </button>
+
+                <a class="dashboard-reset" href="{{ url_for('posts.seller_dashboard') }}">
+                    清除條件
+                </a>
+            </form>
+
+
+            <!-- 狀態篩選 -->
+
+            <!-- 商品狀態篩選 -->
+            <nav class="dashboard-filters">
+
+                {% set filter_items = [
+                ("all", "全部", counts.all),
+                ("active", "上架中", counts.active),
+                ("inactive", "已下架", counts.inactive),
+                ("draft", "草稿", counts.draft)
+                ] %}
+
+                {% for value, label, count in filter_items %}
+
+                <a class="dashboard-filter
+        {% if selected_status == value %}is-active{% endif %}" href="{{ url_for(
+            'posts.seller_dashboard',
+            status=value,
+            q=keyword,
+            sort=selected_sort
+        ) }}">
+                    {{ label }} ({{ count }})
+                </a>
+
+                {% endfor %}
+
+            </nav>
+            <p class="dashboard-result-count">
+                目前找到 {{ total }} 筆商品
+            </p>
+
+
+            <!-- 貼文資料表 -->
+            <div class="dashboard-table-wrapper">
+
+                <table class="dashboard-table">
+
+                    <thead>
+                        <tr>
+                            <th>商品</th>
+                            <th>分類</th>
+                            <th>價格</th>
+                            <th>狀態</th>
+                            <th>管理</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for post in posts %}
+                        <tr>
+
+                            <!-- 商品圖片與名稱 -->
+                            <td>
+                                <div class="dashboard-product">
+
+                                    {% if post.image_filename %}
+                                    <img src="{{ url_for('posts.post_image', post_id=post.id) }}"
+                                        alt="{{ post.title }}">
+                                    {% else %}
+                                    <div class="dashboard-no-image">
+                                        H/U
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="dashboard-product-info">
+                                        <strong>
+                                            {{ post.title }}
+                                        </strong>
+
+                                        <small>
+                                            POST-{{ "%03d"|format(post.id) }}
+                                        </small>
+                                    </div>
+
+                                </div>
+                            </td>
+
+                            <!-- 分類 -->
+                            <td>
+                                {{ post.category }}
+                            </td>
+
+                            <!-- 價格 -->
+                            <td class="dashboard-price">
+                                NT$ {{ "{:,}".format(post.price) }}
+                            </td>
+
+                            <!-- 上架狀態 -->
+                            <td>
+                                <span class="seller-status-badge status-{{ post.status }}">
+                                    {% if post.status == "active" %}
+                                    ● 上架中
+                                    {% elif post.status == "inactive" %}
+                                    ● 已下架
+                                    {% else %}
+                                    ● 草稿
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <!-- 管理按鈕 -->
+                            <td>
+
+                                <div class="dashboard-actions">
+
+                                    <!-- 查看商品 -->
+                                    <a href="{{ url_for('posts.seller_preview', post_id=post.id) }}">
+                                        查看
+                                    </a>
+
+                                    <!-- 編輯商品 -->
+                                    <a href="{{ url_for('posts.edit_post', post_id=post.id) }}">
+                                        編輯
+                                    </a>
+
+                                    <!-- 快速上架 / 下架 -->
+                                    {% if post.status != "draft" %}
+
+                                    <form method="POST"
+                                        action="{{ url_for('posts.toggle_post_status', post_id=post.id) }}">
+                                        <button type="submit" class="dashboard-toggle-button"
+                                            onclick="return confirm('確定要更改商品上架狀態嗎？');">
+                                            {% if post.status == "active" %}
+                                            下架
+                                            {% else %}
+                                            上架
+                                            {% endif %}
+                                        </button>
+                                    </form>
+
+                                    {% endif %}
+
+                                    <!-- 刪除商品 -->
+                                    <form method="POST" action="{{ url_for('posts.delete_post', post_id=post.id) }}"
+                                        onsubmit="return confirm('確定要刪除這篇貼文嗎？');">
+                                        <button type="submit" class="dashboard-delete-button">
+                                            刪除
+                                        </button>
+                                    </form>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+                            <td colspan="5" class="dashboard-empty">
+                                目前沒有符合條件的商品貼文。
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <!-- Dashboard 分頁 -->
+
+            <!-- Dashboard 分頁 -->
+            {% if total_pages > 1 %}
+            <div class="dashboard-pagination">
+
+                {% if page > 1 %}
+                <a href="{{ url_for('posts.seller_dashboard',
+                       page=page-1,
+                       q=keyword,
+                       status=selected_status,
+                       sort=selected_sort) }}">
+                    ← 上一頁
+                </a>
+                {% else %}
+                <span class="pagination-disabled">← 上一頁</span>
+                {% endif %}
+
+                <span class="pagination-current">
+                    第 {{ page }} / {{ total_pages }} 頁
+                </span>
+
+                {% if page < total_pages %} <a href="{{ url_for('posts.seller_dashboard',
+                       page=page+1,
+                       q=keyword,
+                       status=selected_status,
+                       sort=selected_sort) }}">
+                    下一頁 →
+                    </a>
+                    {% else %}
+                    <span class="pagination-disabled">下一頁 →</span>
+                    {% endif %}
+
+            </div>
+            {% endif %}
+
+
+
+        </section>
+
+    </main>
+
+    <footer class="site-footer">
+        <span>HYDRA UNDERGROUND / SELLER DASHBOARD</span>
+        <span>本機授權資安教學靶場</span>
+    </footer>
+
+</div>
+{% endblock %}

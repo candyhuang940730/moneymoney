@@ -1,0 +1,127 @@
+
+{% extends "base.html" %}
+
+{% block title %}
+IDOR 挑戰｜Hydra Underground
+{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/posts.css') }}">
+
+<div class="page-shell">
+
+    <main class="seller-main">
+
+        <div class="seller-status">
+            SELLER TERMINAL / PRIVATE ACCESS
+        </div>
+
+        <section class="seller-hero">
+
+            <p class="eyebrow">
+                HYDRA UNDERGROUND / CTF CHALLENGE
+            </p>
+
+            <h1>
+                私人情報。<span>存取測試。</span>
+            </h1>
+
+            <p class="seller-description">
+                目前登入身分：{{ current_seller }}
+            </p>
+
+            <p class="seller-description">
+                以下是你的私人貼文。
+                嘗試查看自己的情報，並觀察網址。
+            </p>
+
+        </section>
+
+        <section class="seller-section">
+
+            <h2>我的私人貼文</h2>
+
+            <div class="seller-post-grid">
+
+                {% for item in posts %}
+
+                <article class="seller-card">
+
+                    <div class="seller-card-top">
+                        <span>
+                            POST-{{ "%03d"|format(item.id) }}
+                        </span>
+
+                        <span>PRIVATE</span>
+                    </div>
+
+                    <h3>{{ item.title }}</h3>
+
+                    <p class="seller-preview">
+                        所有者：{{ item.author }}
+                    </p>
+
+                    <div class="seller-card-bottom">
+
+                        <span>私人草稿</span>
+
+                        <a href="{{ url_for(
+                            'posts.seller_idor_challenge',
+                            post_id=item.id
+                        ) }}">
+                            查看情報 ↗
+                        </a>
+
+                    </div>
+
+                </article>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+        {% if post %}
+
+        <section class="seller-section">
+
+            <p class="eyebrow">
+                PRIVATE INTELLIGENCE
+            </p>
+
+            <h2>{{ post.title }}</h2>
+
+            <p class="seller-description">
+                貼文編號：{{ post.id }}
+            </p>
+
+            <p class="seller-description">
+                所有者：{{ post.author }}
+            </p>
+
+            <div class="seller-detail-card">
+
+                <div class="seller-full-content"
+                     style="white-space: pre-wrap;">
+                    {{ post.content }}
+                </div>
+
+            </div>
+
+            <a class="seller-back"
+               href="{{ url_for('posts.seller_idor_challenge') }}">
+                ← 返回我的私人貼文
+            </a>
+
+        </section>
+
+        {% endif %}
+
+    </main>
+
+</div>
+
+{% endblock %}

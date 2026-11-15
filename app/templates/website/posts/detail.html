@@ -1,81 +1,219 @@
+
 {% extends "base.html" %}
-{% block title %}{{ post.title }}｜Hydra Underground{% endblock %}
+
+{% block title %}
+{{ post.title }}｜Hydra Underground
+{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/posts.css') }}">
+
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/posts.css') }}">
 
 <div class="page-shell">
+
+    <!-- 頂部導覽列 -->
     <header class="site-header">
+
         <a class="brand" href="{{ url_for('website.index') }}">
-            <span class="brand-mark">H<span>/</span>U</span>
-            <span class="brand-name">HYDRA <strong>UNDERGROUND</strong></span>
+            <span class="brand-mark">
+                H<span>/</span>U
+            </span>
+
+            <span class="brand-name">
+                HYDRA <strong>UNDERGROUND</strong>
+            </span>
         </a>
+
         <div class="header-actions">
-            <a class="header-link" href="{{ url_for('posts.post_list') }}">返回列表</a>
-            <a class="header-link" href="{{ url_for('ctf_center.index') }}">任務中心</a>
+
+            <a class="header-link"
+               href="{{ url_for('website.index') }}">
+                地下網站
+            </a>
+
+            <a class="header-link"
+               href="{{ url_for('posts.post_list') }}">
+                商品列表
+            </a>
+
+            {% if is_seller_preview %}
+            <a class="header-link"
+               href="{{ url_for('posts.seller_dashboard') }}">
+                賣家管理中心
+            </a>
+            {% endif %}
+
         </div>
+
     </header>
 
+    <!-- 主要內容 -->
     <main class="seller-main">
+
+        <!-- 連線狀態 -->
         <div class="seller-status">
             <span class="status-dot"></span>
-            MARKET INTELLIGENCE / POST DETAIL
+
+            {% if is_seller_preview %}
+                SELLER TERMINAL / PRODUCT PREVIEW
+            {% else %}
+                UNDERGROUND MARKET / PRODUCT DETAIL
+            {% endif %}
         </div>
 
+        <!-- 商品標題 -->
         <section class="seller-hero">
+
             <p class="eyebrow">
-                POST-{{ "%03d"|format(post.id) }} / CLASSIFIED
+                POST-{{ "%03d"|format(post.id) }}
+                /
+                {% if is_seller_preview %}
+                    SELLER PREVIEW
+                {% else %}
+                    MARKET PRODUCT
+                {% endif %}
             </p>
-            <h1 class="seller-detail-title">{{ post.title }}</h1>
+
+            <h1 class="seller-detail-title">
+                {{ post.title }}
+            </h1>
+
             <p class="seller-description">
                 發布者 / {{ post.author }}
             </p>
+
         </section>
 
+        <!-- 商品詳情卡片 -->
         <article class="seller-detail-card">
+
             <div class="seller-card-top">
-                <span>情報內容</span>
+
+                <span>商品情報</span>
+
                 <span>HYDRA NETWORK</span>
+
             </div>
 
+            <!-- 商品圖片 -->
             {% if post.image_filename %}
+
             <div class="seller-detail-image">
-                <img src="{{ url_for('posts.post_image', post_id=post.id) }}" alt="{{ post.title }}">
+
+                <img
+                    src="{{ url_for('posts.post_image', post_id=post.id) }}"
+                    alt="{{ post.title }}"
+                    loading="lazy"
+                >
+
             </div>
+
+            {% else %}
+
+            <div class="seller-no-image">
+                <span>H/U</span>
+                <small>NO IMAGE AVAILABLE</small>
+            </div>
+
             {% endif %}
 
+            <!-- 商品資訊 -->
+            <div class="seller-detail-product">
 
-            <div class="seller-full-content">{{ post.content }}</div>
+                <p class="seller-category">
+                    商品分類 / {{ post.category }}
+                </p>
+
+                <p class="seller-price">
+                    NT$ {{ "{:,}".format(post.price) }}
+                </p>
+
+                {% if is_seller_preview %}
+                <span class="seller-status-badge status-{{ post.status }}">
+
+                    {% if post.status == "active" %}
+                        ● 上架中
+                    {% elif post.status == "inactive" %}
+                        ● 已下架
+                    {% else %}
+                        ● 草稿
+                    {% endif %}
+
+                </span>
+                {% endif %}
+
+            </div>
+
+            <!-- 商品介紹 -->
+            <div class="seller-full-content">
+                {{ post.content }}
+            </div>
+
+            <!-- 賣家專屬操作 -->
+            {% if is_seller_preview %}
 
             <div class="seller-post-actions">
 
-                <!-- 編輯貼文 -->
-                <a class="seller-button" href="{{ url_for('posts.edit_post', post_id=post.id) }}">
-                    編輯貼文
+                <!-- 編輯商品 -->
+                <a class="seller-button"
+                   href="{{ url_for('posts.edit_post', post_id=post.id) }}">
+                    編輯商品 ↗
                 </a>
 
-                <!-- 刪除貼文 -->
-                <form method="POST" action="{{ url_for('posts.delete_post', post_id=post.id) }}"
-                    onsubmit="return confirm('確定要刪除這篇文章嗎？');">
+                <!-- 刪除商品 -->
+                <form
+                    method="POST"
+                    action="{{ url_for('posts.delete_post', post_id=post.id) }}"
+                    onsubmit="return confirm('確定要刪除這篇商品貼文嗎？');"
+                >
 
-                    <button class="seller-delete-button" type="submit">
-                        刪除貼文
+                    <button
+                        class="seller-delete-button"
+                        type="submit">
+                        刪除商品
                     </button>
 
                 </form>
 
             </div>
 
+            {% endif %}
+
         </article>
 
-        <a class="seller-back" href="{{ url_for('posts.post_list') }}">
-            ← 返回賣家貼文列表
+        <!-- 返回按鈕 -->
+        {% if is_seller_preview %}
+
+        <a class="seller-back"
+           href="{{ url_for('posts.seller_dashboard') }}">
+            ← 返回賣家管理中心
         </a>
+
+        {% else %}
+
+        <a class="seller-back"
+           href="{{ url_for('posts.post_list') }}">
+            ← 返回商品列表
+        </a>
+
+        {% endif %}
+
     </main>
 
+    <!-- 頁尾 -->
     <footer class="site-footer">
-        <span>HYDRA UNDERGROUND / POST DETAIL</span>
-        <span>本機授權資安教學靶場</span>
+
+        <span>
+            HYDRA UNDERGROUND / PRODUCT DETAIL
+        </span>
+
+        <span>
+            本機授權資安教學靶場
+        </span>
+
     </footer>
+
 </div>
+
 {% endblock %}

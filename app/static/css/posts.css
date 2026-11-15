@@ -278,3 +278,551 @@
 .seller-form input[type="file"] {
     cursor: pointer;
 }
+
+/* ===================================
+   HYDRA 商品價格、分類、上架狀態
+=================================== */
+
+.seller-product-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 12px 0;
+}
+
+.seller-category {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.seller-price {
+    margin: 15px 0;
+    color: var(--green);
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.seller-status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border: 1px solid var(--line);
+    font-size: 11px;
+    border-radius: 4px;
+}
+
+.status-active {
+    color: #b8f58b;
+    border-color: #496b38;
+}
+
+.status-inactive {
+    color: #f4a261;
+    border-color: #805d35;
+}
+
+.status-draft {
+    color: #a6b5ac;
+    border-color: #53665a;
+}
+
+.seller-detail-product {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.seller-form select {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid var(--line-bright);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.seller-form select:focus {
+    outline: 1px solid var(--green);
+}
+
+/* 表單欄位與按鈕 */
+
+.seller-form input[type="number"] {
+    width: 100%;
+}
+
+.seller-post-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+.seller-post-actions form {
+    margin: 0;
+}
+
+.seller-delete-button {
+    padding: 13px 22px;
+    border: 1px solid #d96b6b;
+    background: transparent;
+    color: #ff8d8d;
+    font: 700 13px var(--mono);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.seller-delete-button:hover {
+    background: #d96b6b;
+    color: #080e0c;
+}
+
+/* =====================================
+   HYDRA Seller Dashboard
+===================================== */
+
+.dashboard-section {
+    margin-top: 48px;
+}
+
+.dashboard-section-heading {
+    margin-bottom: 24px;
+}
+
+.dashboard-section-heading h2 {
+    margin: 8px 0;
+    font-size: 26px;
+}
+
+/* 統計卡片 */
+
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.dashboard-stat-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    padding: 25px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+}
+
+.dashboard-stat-label {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.dashboard-stat-card strong {
+    color: var(--green);
+    font-size: 40px;
+    line-height: 1;
+}
+
+.dashboard-stat-card small {
+    color: var(--faint);
+    font: 10px var(--mono);
+    letter-spacing: 1px;
+}
+
+/* 篩選按鈕 */
+
+.dashboard-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 25px 0;
+}
+
+.dashboard-filter {
+    padding: 10px 16px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    transition: 0.2s;
+}
+
+.dashboard-filter:hover {
+    color: var(--green);
+    border-color: var(--green);
+}
+
+.dashboard-filter.is-active {
+    color: var(--bg);
+    background: var(--green);
+    border-color: var(--green);
+}
+
+/* 商品列表 */
+
+.dashboard-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--line);
+}
+
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px;
+}
+
+.dashboard-table thead {
+    background: var(--surface);
+}
+
+.dashboard-table th {
+    padding: 18px;
+    text-align: left;
+    color: var(--muted);
+    font: 11px var(--mono);
+    letter-spacing: 1px;
+}
+
+.dashboard-table td {
+    padding: 18px;
+    border-top: 1px solid var(--line);
+    color: var(--text);
+    font-size: 13px;
+}
+
+.dashboard-table tbody tr:hover {
+    background: rgba(184, 245, 139, 0.035);
+}
+
+/* 商品圖片 */
+
+.dashboard-product {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.dashboard-product img,
+.dashboard-no-image {
+    width: 65px;
+    height: 65px;
+    flex-shrink: 0;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+}
+
+.dashboard-product img {
+    object-fit: cover;
+}
+
+.dashboard-no-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    color: var(--green);
+    font: bold 15px var(--mono);
+}
+
+.dashboard-product-info {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 140px;
+}
+
+.dashboard-product-info strong {
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.dashboard-product-info small {
+    color: var(--faint);
+    font: 10px var(--mono);
+}
+
+/* 價格 */
+
+.dashboard-table td.dashboard-price {
+    color: var(--green);
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* 操作按鈕 */
+
+.dashboard-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dashboard-actions a {
+    color: var(--green);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.dashboard-actions a:hover {
+    text-decoration: underline;
+}
+
+.dashboard-actions form {
+    margin: 0;
+}
+
+.dashboard-actions button {
+    border: 0;
+    background: transparent;
+    color: #ff8d8d;
+    cursor: pointer;
+    font: inherit;
+}
+
+.dashboard-actions button:hover {
+    text-decoration: underline;
+}
+
+/* 無貼文狀態 */
+
+.dashboard-table td.dashboard-empty {
+    padding: 50px 20px;
+    text-align: center;
+    color: var(--muted);
+}
+
+/* 響應式 */
+
+@media (max-width: 900px) {
+    .dashboard-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===================================
+   賣家列表功能按鈕
+=================================== */
+
+.seller-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* ===================================
+   沒有商品圖片時的顯示
+=================================== */
+
+.seller-no-image {
+    width: 100%;
+    height: 210px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+
+    margin-bottom: 20px;
+
+    border: 1px solid var(--line);
+    background: var(--surface);
+}
+
+.seller-no-image span {
+    color: var(--green);
+    font: bold 32px var(--mono);
+}
+
+.seller-no-image small {
+    color: var(--faint);
+    font: 10px var(--mono);
+    letter-spacing: 2px;
+}
+
+/* ===================================
+   沒有貼文時的提示
+=================================== */
+
+.seller-empty h3 {
+    margin: 0 0 12px;
+    color: var(--text);
+}
+
+.seller-empty p {
+    margin-bottom: 24px;
+    line-height: 1.8;
+}
+
+/* 手機版 */
+
+@media (max-width: 760px) {
+    .seller-header-actions {
+        width: 100%;
+    }
+
+    .seller-header-actions .seller-button {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+/* =====================================
+   Seller Dashboard 搜尋與排序
+===================================== */
+
+.dashboard-search-form {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 25px;
+}
+
+.dashboard-search-form input,
+.dashboard-search-form select {
+    padding: 13px 15px;
+    border: 1px solid var(--line-bright);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+}
+
+.dashboard-search-form input {
+    flex: 1;
+    min-width: 200px;
+}
+
+.dashboard-search-form select {
+    min-width: 150px;
+}
+
+.dashboard-search-form input:focus,
+.dashboard-search-form select:focus {
+    outline: 1px solid var(--green);
+}
+
+.dashboard-search-form .seller-button {
+    cursor: pointer;
+}
+
+.dashboard-reset {
+    color: var(--muted);
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.dashboard-reset:hover {
+    color: var(--green);
+}
+
+@media (max-width: 600px) {
+    .dashboard-search-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dashboard-search-form input,
+    .dashboard-search-form select,
+    .dashboard-search-form button {
+        width: 100%;
+    }
+}
+.dashboard-result-count {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 15px 0;
+}
+
+/* =====================================
+   Dashboard 快速上架 / 下架按鈕
+===================================== */
+
+.dashboard-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.dashboard-actions form {
+    margin: 0;
+}
+
+.dashboard-actions .dashboard-toggle-button {
+    color: #b8f58b;
+    border: 1px solid #496b38;
+    background: transparent;
+    padding: 7px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.dashboard-actions .dashboard-toggle-button:hover {
+    background: #b8f58b;
+    color: #080e0c;
+    text-decoration: none;
+}
+
+.dashboard-actions .dashboard-delete-button {
+    color: #ff8d8d;
+    border: 1px solid #805050;
+    background: transparent;
+    padding: 7px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.dashboard-actions .dashboard-delete-button:hover {
+    background: #d96b6b;
+    color: #080e0c;
+    text-decoration: none;
+}
+
+/* Seller Dashboard 分頁 */
+
+.dashboard-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 25px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+.dashboard-pagination a {
+    padding: 10px 18px;
+    border: 1px solid var(--green);
+    color: var(--green);
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.dashboard-pagination a:hover {
+    background: var(--green);
+    color: var(--bg);
+}
+
+.pagination-current {
+    color: var(--text);
+    font-size: 13px;
+}
+
+.pagination-disabled {
+    padding: 10px 18px;
+    border: 1px solid var(--line);
+    color: var(--faint);
+    font-size: 13px;
+}

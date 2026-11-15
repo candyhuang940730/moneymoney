@@ -1,66 +1,133 @@
+
 {% extends "base.html" %}
 {% block title %}發布貼文｜Hydra Underground{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/posts.css') }}">
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/posts.css') }}">
 
 <div class="page-shell">
-  <header class="site-header">
-    <a class="brand" href="{{ url_for('website.index') }}">
-      <span class="brand-mark">H<span>/</span>U</span>
-      <span class="brand-name">HYDRA <strong>UNDERGROUND</strong></span>
-    </a>
-    <div class="header-actions">
-      <a class="header-link" href="{{ url_for('posts.post_list') }}">返回貼文列表</a>
-      <a class="header-link" href="{{ url_for('ctf_center.index') }}">任務中心</a>
-    </div>
-  </header>
+    <header class="site-header">
+        <a class="brand" href="{{ url_for('website.index') }}">
+            <span class="brand-mark">H<span>/</span>U</span>
+            <span class="brand-name">
+                HYDRA <strong>UNDERGROUND</strong>
+            </span>
+        </a>
 
-  <main class="seller-main">
-    <div class="seller-status">
-      <span class="status-dot"></span>
-      SELLER TERMINAL / WRITE ACCESS
-    </div>
+        <div class="header-actions">
+            <a class="header-link"
+               href="{{ url_for('posts.post_list') }}">
+                返回貼文列表
+            </a>
+            <a class="header-link"
+               href="{{ url_for('ctf_center.index') }}">
+                任務中心
+            </a>
+        </div>
+    </header>
 
-    <section class="seller-hero">
-      <p class="eyebrow">SELLER NETWORK / NEW MESSAGE</p>
-      <h1>發布新的<br><span>市場情報。</span></h1>
-      <p class="seller-description">
-        填寫文章標題與內容，將交易情報發布至地下市場。
-      </p>
-    </section>
+    <main class="seller-main">
+        <div class="seller-status">
+            <span class="status-dot"></span>
+            SELLER TERMINAL / CREATE POST
+        </div>
 
-    <section class="seller-form-panel">
-      <p class="eyebrow">01 / NEW POST</p>
-      <h2>建立賣家貼文</h2>
+        <section class="seller-hero">
+            <p class="eyebrow">SELLER NETWORK / NEW POST</p>
+            <h1>發布新的<br><span>市場情報。</span></h1>
+            <p class="seller-description">
+                填寫商品資料、上傳圖片，發布你的賣家貼文。
+            </p>
+        </section>
 
-      <form method="POST" enctype="multipart/form-data" class="seller-form">
-        <label for="title">文章標題</label>
-        <input id="title" name="title" type="text" maxlength="100" placeholder="輸入文章標題" required>
+        <section class="seller-form-panel">
+            <p class="eyebrow">01 / PRODUCT DETAILS</p>
+            <h2>新增賣家貼文</h2>
 
-        <label for="content">文章內容</label>
-        <textarea id="content" name="content" rows="8" placeholder="輸入交易情報或商品介紹..." required></textarea>
+            <form method="POST"
+                  enctype="multipart/form-data"
+                  class="seller-form">
 
-        <label for="image">商品圖片（選填）</label>
+                <label for="title">商品名稱 / 貼文標題</label>
+                <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    maxlength="100"
+                    placeholder="例如：HYDRA 加密隨身碟"
+                    required
+                >
 
-        <input type="file" id="image" name="image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+                <label for="price">商品價格（NT$）</label>
+                <input
+                    type="number"
+                    id="price"
+                    name="price"
+                    min="0"
+                    max="100000000"
+                    step="1"
+                    placeholder="例如：1299"
+                    required
+                >
 
-        <p class="seller-image-hint">
-          支援 JPG、PNG、WebP，檔案大小不超過 3 MB。
-        </p>
+                <label for="category">商品分類</label>
+                <select id="category" name="category" required>
+                    <option value="">請選擇分類</option>
+                    {% for category in categories %}
+                    <option value="{{ category }}">
+                        {{ category }}
+                    </option>
+                    {% endfor %}
+                </select>
 
+                <label for="status">商品狀態</label>
+                <select id="status" name="status" required>
+                    {% for value, label in statuses.items() %}
+                    <option value="{{ value }}">
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
 
+                <label for="content">商品介紹 / 貼文內容</label>
+                <textarea
+                    id="content"
+                    name="content"
+                    rows="8"
+                    placeholder="介紹你的商品..."
+                    required
+                ></textarea>
 
-        <button class="seller-button" type="submit">
-          發布文章 ↗
-        </button>
-      </form>
-    </section>
-  </main>
+                <label for="image">商品圖片（選填）</label>
+                <input
+                    type="file"
+                    id="image"
+                    name="image"
+                    accept=".jpg,.jpeg,.png,.webp"
+                >
 
-  <footer class="site-footer">
-    <span>HYDRA UNDERGROUND / SELLER TERMINAL</span>
-    <span>本機授權資安教學靶場</span>
-  </footer>
+                <p class="seller-image-hint">
+                    支援 JPG、PNG、WebP，單張圖片不超過 3 MB。
+                </p>
+
+                <div class="seller-post-actions">
+                    <button class="seller-button" type="submit">
+                        發布貼文 ↗
+                    </button>
+
+                    <a class="seller-back"
+                       href="{{ url_for('posts.post_list') }}">
+                        取消
+                    </a>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <span>HYDRA UNDERGROUND / SELLER TERMINAL</span>
+        <span>本機授權資安教學靶場</span>
+    </footer>
 </div>
 {% endblock %}
