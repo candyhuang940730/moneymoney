@@ -599,25 +599,25 @@
   },
   {
     "id": "HU-PRD-027",
-    "sku": "HU-EXP-9999",
+    "sku": "HU-CIP-9999",
     "category": "漏洞情報",
     "category_slug": "exploit",
-    "name": "Hydra 終極主控協議硬編碼後門密鑰",
-    "name_en": "Hydra Master C2 Protocol Secret Key",
-    "security_tag": "FLAG ARTIFACT",
-    "price": 9999,
-    "original_price": 15000,
+    "name": "高階密碼本 / 核心協議金鑰",
+    "name_en": "Classified Cipherbook",
+    "security_tag": "TIER-ROOT / FLAG ARTIFACT",
+    "price": 60000,
+    "original_price": 80000,
     "stock": "唯一 1 份",
     "stock_status": "stock-low",
-    "icon": "🗝",
+    "icon": "📖",
     "rating": 5.0,
-    "description": "從 Hydra 核心韌體提取出的最終主控金鑰，擁有此密鑰可直接向地下伺服器群發送 Root 指令並解鎖第 5 章終極機密文件。",
+    "description": "Hydra 核心決策層專用之離線高階密碼本，封裝了通往核心資料庫與伺服器群的對稱式密鑰、認證令牌與通訊密碼表。",
     "specs": [
-      "金鑰類型: Ed25519 Root Master",
-      "用途: 解鎖全境終端與 FLAG",
-      "稀缺性: 靶場最高價值道具",
-      "交付: 包含章節線索校驗碼"
+      "安全等級: TIER-ROOT",
+      "加密規格: Quantum Kyber-1024",
+      "解密驗證: 需通過結算驗證後方可解密下載交付酬載",
+      "交付形式: 交易成功即時交付 FLAG"
     ],
-    "details": "FLAG{HYDRA_MARKETPLACE_TIER_FINAL_UNLOCK_2026}。此物品代表第 2 章資本累積的最高突破線索，獲得此項象徵著對地下黑市交易體系的全面控制。"
+    "details": "【機密資產：需通過結算驗證後方可解密下載交付酬載】此密碼本封存了 Hydra 核心系統的通訊協議與特權憑證。由於涉及最高機密，未完成全額 BTC 結算前酬載處於量子混淆鎖定狀態。付款成功後將即時交付解密金鑰與專屬 FLAG。"
   }
 ]

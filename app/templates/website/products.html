@@ -3,6 +3,90 @@
 {% block title %}黑市交易目錄｜Hydra Underground{% endblock %}
 
 {% block content %}
+<style>
+.reset-chip-btn {
+  background: rgba(187, 104, 94, 0.15);
+  border: 1px solid rgba(187, 104, 94, 0.4);
+  color: #ff9d94;
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 3px;
+  margin-left: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--mono);
+}
+.reset-chip-btn:hover {
+  background: rgba(187, 104, 94, 0.35);
+  border-color: var(--red);
+  color: #fff;
+}
+.purchase-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.purchase-input-group label {
+  font-size: 12px;
+  color: var(--muted);
+}
+.purchase-input-group input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--green);
+  padding: 8px 12px;
+  font-family: var(--mono);
+  border-radius: 4px;
+  font-size: 14px;
+}
+.purchase-input-group input:focus {
+  border-color: var(--green);
+  outline: none;
+}
+.flag-banner {
+  background: rgba(184, 245, 139, 0.08);
+  border: 1px solid var(--green);
+  border-radius: 6px;
+  padding: 16px;
+  margin: 18px 0;
+  box-shadow: 0 0 20px rgba(184, 245, 139, 0.12);
+}
+.flag-code-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #050a08;
+  border: 1px dashed var(--line-bright);
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+.flag-code-container code {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 15px;
+  color: var(--green);
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  word-break: break-all;
+}
+.btn-copy {
+  background: var(--surface-strong);
+  border: 1px solid var(--line-bright);
+  color: var(--text);
+  padding: 6px 14px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-copy:hover {
+  background: var(--green);
+  color: #000;
+  border-color: var(--green);
+}
+</style>
 <div class="page-shell">
   <header class="site-header">
     <a class="brand" href="{{ url_for('website.index') }}" aria-label="Hydra Underground 地下網站首頁">
@@ -10,25 +94,20 @@
       <span class="brand-name">HYDRA <strong>UNDERGROUND</strong></span>
     </a>
     <div class="header-actions">
-      <!-- 身分檢查與切換（已依需求註解，僅展示一般正常商品頁面）
-      <div class="account-chip {% if is_admin %}admin-active{% endif %}" title="目前登入身分與權限">
+      <!-- 連線節點狀態 -->
+      <div class="account-chip" title="目前節點連線狀態">
         <span class="status-dot"></span>
-        <span>身分:</span>
-        <strong id="account-name">{% if is_admin %}ADMIN (管理員){% else %}{{ user }} (一般用戶){% endif %}</strong>
-        {% if is_admin %}
-        <a href="{{ url_for('website.products', role='guest') }}" class="account-toggle-btn" title="切換為一般用戶身分 (0 BTC)">切換為一般用戶</a>
-        {% else %}
-        <a href="{{ url_for('website.products', role='admin') }}" class="account-toggle-btn" title="切換為管理員帳號 (60,000 BTC)">切換為管理員</a>
-        {% endif %}
+        <span>節點:</span>
+        <strong id="account-name">NODE-02 / 通訊正常</strong>
       </div>
-      -->
 
       <!-- 比特幣餘額 (BTC Balance) -->
       <div class="balance-chip" title="目前帳戶可用 BTC 餘額">
         <span class="status-dot"></span>
         <span>餘額:</span>
-        <strong id="user-balance">{{ "{:,}".format(balance) }}</strong>
+        <strong id="user-balance">{{ "{:,}".format(balance or 0) }}</strong>
         <span style="color: var(--faint);">BTC</span>
+        <button id="btn-reset-balance" type="button" class="reset-chip-btn" title="重設餘額為 0 BTC（供重新演練漏洞）">重設</button>
       </div>
 
       <a class="header-link" href="{{ url_for('portal') }}">導覽入口</a>
@@ -44,8 +123,7 @@
     <section class="products-hero" aria-labelledby="marketplace-title">
       <div class="system-line">
         <span class="status-dot"></span> 受邀者節點已授權
-        <!-- <span class="system-separator">/</span> 存取級別: {% if is_admin %}<strong style="color: #ebd188;">TIER-ROOT (ADMIN)</strong>{% else %}TIER-2 (USER){% endif %} -->
-        <span class="system-separator">/</span> 存取級別: TIER-2 (USER)
+        <span class="system-separator">/</span> 存取級別: <span style="color: var(--muted);">TIER-2 (標準節點)</span>
         <span class="system-separator">/</span> 資料來源: <strong style="color: var(--green);">app/data/products.json</strong>
         <span class="system-separator">/</span> 結算代幣: <strong>BTC</strong>
       </div>
@@ -222,6 +300,103 @@
   <span class="dialog-coordinate" aria-hidden="true">H/U · 02/05</span>
 </dialog>
 
+<!-- 採購確認彈窗 (Purchase Dialog) -->
+<dialog id="purchase-dialog" class="story-dialog" aria-labelledby="purchase-title">
+  <div class="dialog-topline">
+    <span><span class="status-dot"></span> 匿名結算協議 / 暗網標的交易單</span>
+    <button type="button" class="dialog-close" data-purchase-close aria-label="關閉採購視窗">×</button>
+  </div>
+  <div class="dialog-content">
+    <p class="eyebrow" id="purchase-sku">H/U · SKU</p>
+    <h2 id="purchase-title">採購標的名稱</h2>
+    <p id="purchase-desc" class="story-lead">商品規格與機密等級簡介</p>
+
+    <form id="purchase-form" onsubmit="return false;" style="margin-top: 18px;">
+      <input type="hidden" id="purchase-product-id" value="">
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div class="purchase-input-group">
+          <label for="purchase-price-input">單價 (BTC) <span id="purchase-price-tag" style="color: var(--faint);">[標定單價]</span></label>
+          <input type="number" id="purchase-price-input">
+        </div>
+        <div class="purchase-input-group">
+          <label for="purchase-quantity-input">採購數量 <span style="color: var(--faint);">[數量]</span></label>
+          <input type="number" id="purchase-quantity-input" value="1">
+        </div>
+      </div>
+
+      <div class="investigation-box" style="margin-top: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 13px; color: var(--muted);">預估應付結算總額：</span>
+          <span style="font-family: var(--mono); font-size: 18px; color: var(--green); font-weight: bold;"><span id="purchase-total-calc">0</span> BTC</span>
+        </div>
+        <p id="purchase-status-tip" style="font-size: 12px; color: var(--faint); margin-top: 8px; margin-bottom: 0;">
+          訂單將發送至 <code>/site/api/buy</code> 匿名結算合約。結算單由底層合約驗證交付。
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
+        <button class="dialog-action" type="button" data-purchase-close style="margin-top: 0; width: auto; padding: 0 20px; background: transparent; border: 1px solid var(--line); color: var(--muted);">
+          取消返回
+        </button>
+        <button class="dialog-action" id="btn-confirm-purchase" type="button" style="margin-top: 0; width: auto; padding: 0 28px;">
+          確認送出結算 ↗
+        </button>
+      </div>
+    </form>
+  </div>
+  <span class="dialog-coordinate" aria-hidden="true">H/U · BUY-PROTOCOL</span>
+</dialog>
+
+<!-- 第二章 FLAG 達成交付彈窗 (FLAG Delivery Modal) -->
+<dialog id="flag-delivery-dialog" class="story-dialog" aria-labelledby="flag-title">
+  <div class="dialog-topline" style="border-bottom-color: var(--green);">
+    <span><span class="status-dot" style="background: var(--green); box-shadow: 0 0 10px var(--green);"></span> 第二章調查突破 / 資本累積達成</span>
+    <button type="button" class="dialog-close" data-flag-close aria-label="關閉 FLAG 視窗">×</button>
+  </div>
+  <div class="dialog-content">
+    <p class="eyebrow" style="color: var(--green);">CHAPTER 02 COMPLETE / MISSION SUCCESS</p>
+    <h2 id="flag-title">高階密碼本已解密。<br><span style="color: var(--green);">已取得第二章通關憑證！</span></h2>
+    <p class="story-lead">恭喜調查員！你成功利用黑市交易系統中的業務邏輯漏洞（負數反向儲值 / 參數竄改）獲取了極高價值的「高階密碼本」。底層通訊密鑰已解封。</p>
+
+    <div class="flag-banner">
+      <h3 style="color: var(--green); margin: 0 0 6px 0; font-size: 14px;">第二章通關 FLAG (請複製保存)</h3>
+      <div class="flag-code-container">
+        <code id="flag-display-code">FLAG{Logic_Is_Wealth_In_Darkness}</code>
+        <button type="button" id="btn-copy-flag" class="btn-copy">
+          複製 FLAG
+        </button>
+      </div>
+    </div>
+
+    <!-- 訂單交付收據明細 -->
+    <div style="background: rgba(0,0,0,0.4); border: 1px solid var(--line); border-radius: 4px; padding: 12px 16px; margin-top: 14px; font-size: 13px; font-family: var(--mono);">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span style="color: var(--muted);">交易單號：</span>
+        <strong id="flag-order-id" style="color: var(--text);">HU-ORD-2026-FINAL</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span style="color: var(--muted);">交付標的：</span>
+        <strong id="flag-product-name" style="color: var(--green);">高階密碼本 / 核心協議金鑰</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--muted);">結算狀態：</span>
+        <span style="color: var(--green);">[VERIFIED] 認證通過 · 載荷已交付</span>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
+      <button class="dialog-action" type="button" data-flag-close style="margin-top: 0; width: auto; padding: 0 20px; background: transparent; border: 1px solid var(--line); color: var(--muted);">
+        留在市場
+      </button>
+      <a class="dialog-action" href="{{ url_for('ctf_center.index') }}" style="margin-top: 0; width: auto; padding: 0 24px; display: inline-flex; align-items: center; text-decoration: none;">
+        前往任務中心 ↗
+      </a>
+    </div>
+  </div>
+  <span class="dialog-coordinate" aria-hidden="true">FLAG · CH02</span>
+</dialog>
+
 <!-- HUD 提示訊息 (Toast) -->
 <div id="cyber-toast" class="cyber-toast" role="status" aria-live="polite">
   <div class="toast-topline">
@@ -233,13 +408,21 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- 伺服器傳遞之 JSON 商品資料（使用 application/json 標籤封裝，避免編輯器誤將 Jinja 模板標籤識別為 JS 語法錯誤） -->
+<!-- 伺服器傳遞之狀態設定與 JSON 商品資料（封裝於 application/json 標籤，徹底避免編輯器誤將 Jinja 模板識別為 JS 語法錯誤） -->
+<script id="site-config-data" type="application/json">
+{
+  "balance": {{ balance or 0 }}
+}
+</script>
 <script id="products-json-data" type="application/json">
 {{ products|tojson }}
 </script>
 
 <script>
 (() => {
+  const siteConfigEl = document.getElementById("site-config-data");
+  const siteConfig = siteConfigEl ? JSON.parse(siteConfigEl.textContent || "{}") : {};
+
   // 簡報 Dialog
   const marketDialog = document.getElementById("market-dialog");
   const openMarketBtn = document.querySelector("[data-market-briefing-open]");
@@ -254,6 +437,122 @@
   const specDialog = document.getElementById("spec-dialog");
   const closeSpecBtns = document.querySelectorAll("[data-spec-close]");
   closeSpecBtns.forEach(btn => btn.addEventListener("click", () => specDialog.close()));
+
+  // 採購確認 Dialog
+  const purchaseDialog = document.getElementById("purchase-dialog");
+  const closePurchaseBtns = document.querySelectorAll("[data-purchase-close]");
+  closePurchaseBtns.forEach(btn => btn.addEventListener("click", () => purchaseDialog && purchaseDialog.close()));
+
+  const purchaseSku = document.getElementById("purchase-sku");
+  const purchaseTitle = document.getElementById("purchase-title");
+  const purchaseDesc = document.getElementById("purchase-desc");
+  const purchaseProductId = document.getElementById("purchase-product-id");
+  const purchasePriceInput = document.getElementById("purchase-price-input");
+  const purchaseQuantityInput = document.getElementById("purchase-quantity-input");
+  const purchaseTotalCalc = document.getElementById("purchase-total-calc");
+  const btnConfirmPurchase = document.getElementById("btn-confirm-purchase");
+
+  function updatePurchaseCalc() {
+    if (!purchasePriceInput || !purchaseQuantityInput || !purchaseTotalCalc) return;
+    const p = parseInt(purchasePriceInput.value, 10) || 0;
+    const q = parseInt(purchaseQuantityInput.value, 10) || 0;
+    const total = p * q;
+    purchaseTotalCalc.textContent = total.toLocaleString();
+    if (total < 0) {
+      purchaseTotalCalc.style.color = "var(--red)";
+    } else {
+      purchaseTotalCalc.style.color = "var(--green)";
+    }
+  }
+
+  if (purchasePriceInput) purchasePriceInput.addEventListener("input", updatePurchaseCalc);
+  if (purchaseQuantityInput) purchaseQuantityInput.addEventListener("input", updatePurchaseCalc);
+
+  // FLAG 交付 Dialog
+  const flagDeliveryDialog = document.getElementById("flag-delivery-dialog");
+  const closeFlagBtns = document.querySelectorAll("[data-flag-close]");
+  closeFlagBtns.forEach(btn => btn.addEventListener("click", () => flagDeliveryDialog && flagDeliveryDialog.close()));
+
+  const btnCopyFlag = document.getElementById("btn-copy-flag");
+  if (btnCopyFlag) {
+    btnCopyFlag.addEventListener("click", () => {
+      const flagText = document.getElementById("flag-display-code")?.textContent || "";
+      if (flagText) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(flagText).then(() => {
+            btnCopyFlag.textContent = "已複製！";
+            setTimeout(() => { btnCopyFlag.textContent = "複製 FLAG"; }, 2000);
+          }).catch(() => {
+            prompt("請手動複製 FLAG：", flagText);
+          });
+        } else {
+          prompt("請手動複製 FLAG：", flagText);
+        }
+      }
+    });
+  }
+
+  // 重設餘額按鈕
+  const btnResetBalance = document.getElementById("btn-reset-balance");
+  if (btnResetBalance) {
+    btnResetBalance.addEventListener("click", async () => {
+      try {
+        const resp = await fetch("/site/api/reset-balance", { method: "POST" });
+        const res = await resp.json();
+        currentBalance = 0;
+        if (balanceEl) balanceEl.textContent = "0";
+        showToast(res.message || "餘額已重設為 0 BTC。");
+      } catch (_) {
+        currentBalance = 0;
+        if (balanceEl) balanceEl.textContent = "0";
+        showToast("餘額已重設為 0 BTC。");
+      }
+    });
+  }
+
+  // 送出購買請求
+  if (btnConfirmPurchase) {
+    btnConfirmPurchase.addEventListener("click", async () => {
+      const pid = purchaseProductId.value;
+      const price = parseInt(purchasePriceInput.value, 10);
+      const qty = parseInt(purchaseQuantityInput.value, 10);
+
+      btnConfirmPurchase.disabled = true;
+      btnConfirmPurchase.textContent = "結算中...";
+
+      try {
+        const resp = await fetch("/site/api/buy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ product_id: pid, price: price, quantity: qty })
+        });
+        const result = await resp.json();
+        if (resp.ok && result.success) {
+          currentBalance = result.balance;
+          if (balanceEl) balanceEl.textContent = currentBalance.toLocaleString();
+          if (purchaseDialog) purchaseDialog.close();
+          showToast(result.message);
+
+          if (result.flag) {
+            const flagCodeEl = document.getElementById("flag-display-code");
+            if (flagCodeEl) flagCodeEl.textContent = result.flag;
+            const flagOrderId = document.getElementById("flag-order-id");
+            if (flagOrderId) flagOrderId.textContent = result.order_id || "HU-ORD-2026-FINAL";
+            const flagProductName = document.getElementById("flag-product-name");
+            if (flagProductName) flagProductName.textContent = result.product_name || "高階密碼本 / 核心協議金鑰";
+            if (flagDeliveryDialog) flagDeliveryDialog.showModal();
+          }
+        } else {
+          showToast(result.message || "交易被拒絕，請確認帳戶權限與合約參數。");
+        }
+      } catch (err) {
+        showToast("通訊失敗，無法連線至結算合約。");
+      } finally {
+        btnConfirmPurchase.disabled = false;
+        btnConfirmPurchase.textContent = "確認送出結算 ↗";
+      }
+    });
+  }
 
   // Toast 系統
   const toast = document.getElementById("cyber-toast");
@@ -273,8 +572,8 @@
     }, 4000);
   }
 
-  // 比特幣帳戶餘額（正常商品頁面初始額度 0 BTC）
-  let currentBalance = parseInt("{{ balance }}", 10) || 0;
+  // 比特幣帳戶餘額（從 siteConfig 安全讀取，杜絕編輯器 JS 語法報錯）
+  let currentBalance = parseInt(siteConfig.balance, 10) || 0;
   const balanceEl = document.getElementById("user-balance");
 
   // DOM 容器與控制項
@@ -490,13 +789,31 @@
       if (!card) return;
       const price = parseInt(card.dataset.price, 10) || 0;
       const name = card.dataset.name;
+      const sku = card.dataset.sku;
+      const id = card.dataset.id;
+      const desc = card.querySelector(".product-desc")?.textContent || "";
 
-      if (currentBalance >= price) {
-        currentBalance -= price;
-        if (balanceEl) balanceEl.textContent = currentBalance.toLocaleString();
-        showToast(`✔ 採購成功！已扣除 ${price.toLocaleString()} BTC，[${name}] 交付金鑰已排入暗網佇列。`);
-      } else {
-        showToast(`✖ 餘額不足！需要 ${price.toLocaleString()} BTC，目前餘額為 ${currentBalance.toLocaleString()} BTC。`);
+      if (purchaseProductId) purchaseProductId.value = id;
+      if (purchaseSku) purchaseSku.textContent = "H/U · " + sku;
+      if (purchaseTitle) purchaseTitle.textContent = name;
+      if (purchaseDesc) purchaseDesc.textContent = desc;
+      if (purchasePriceInput) {
+        purchasePriceInput.value = price;
+        purchasePriceInput.readOnly = false;
+        purchasePriceInput.style.borderColor = "var(--line)";
+        const tag = document.getElementById("purchase-price-tag");
+        if (tag) tag.innerHTML = '<span style="color: var(--faint);">[標定單價]</span>';
+      }
+      if (purchaseQuantityInput) purchaseQuantityInput.value = 1;
+      updatePurchaseCalc();
+
+      const tip = document.getElementById("purchase-status-tip");
+      if (tip) {
+        tip.innerHTML = '訂單將發送至 <code>/site/api/buy</code> 匿名結算合約。結算單由底層合約驗證交付。';
+      }
+
+      if (purchaseDialog) {
+        purchaseDialog.showModal();
       }
     }
   });
