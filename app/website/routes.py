@@ -1,6 +1,8 @@
 import json
 import math
+import os
 from pathlib import Path
+from functools import wraps
 from flask import (
     Blueprint,
     jsonify,
@@ -12,6 +14,9 @@ from flask import (
     url_for,
 )
 from app.website.database import Database
+
+# FLAG 只存在伺服器端，部署時用環境變數 HYDRA_FLAG_2 覆寫
+FLAG_2 = os.environ.get("HYDRA_FLAG_2", "FLAG{Logic_Is_Wealth_In_Darkness}")
 
 
 def load_products() -> list[dict]:
@@ -47,6 +52,16 @@ def create_website_blueprint(db: Database):
             session.pop("site_user_id", None)
             return None
         return user
+    
+    def login_required(view):
+        @wraps(view)
+        def wrapper(*args, **kwargs):
+            if load_site_user() is None:
+                if request.path.startswith("/site/api/"):
+                    return jsonify({"success": False, "message": "請先登入"}), 401
+                return redirect(url_for("website.index"))
+            return view(*args, **kwargs)
+        return wrapper
 
     @website_bp.get("/")
     def index():
@@ -74,6 +89,7 @@ def create_website_blueprint(db: Database):
 
     # 商品清單頁面（BTC 計價，正常商品頁面初始 0 BTC）
     @website_bp.route("/products", methods=["GET", "POST"])
+    @login_required
     def products():
         items = load_products()
         current_site_user = load_site_user()
@@ -97,6 +113,7 @@ def create_website_blueprint(db: Database):
 
     # 商品 AJAX 分頁 API
     @website_bp.get("/api/products")
+    @login_required
     def api_products():
         items = load_products()
         page = request.args.get("page", type=int)
@@ -117,6 +134,7 @@ def create_website_blueprint(db: Database):
 
     # 商品購買 API（第二章：資本累積 - 包含角色權限限制與業務邏輯漏洞）
     @website_bp.post("/api/buy")
+    @login_required
     def api_buy():
         data = request.get_json(silent=True) or request.form.to_dict() or {}
         product_id = str(data.get("product_id", "")).strip()
@@ -139,7 +157,7 @@ def create_website_blueprint(db: Database):
             cookie_tier in ("admin", "root", "tier-root", "tier_root")
             or body_role in ("admin", "root")
             or body_is_admin
-            or (current_site_user and current_site_user.get("is_admin"))
+            or (current_site_user and current_site_user["is_admin"])
         )
 
         # 解析數量
@@ -183,6 +201,14 @@ def create_website_blueprint(db: Database):
                 "message": "結算合約中斷：數量參數校驗未通過，無效的結算單位 (ERR_INVALID_SETTLEMENT_QUANTITY)。",
             }), 403
 
+        # 高階密碼本不接受非正數數量：避免用負數數量「反向沖銷」直接換 FLAG。
+        # 單價仍可在特權身分下覆寫（Parameter Tampering 為預期解法之一）。
+        if product_id == "HU-PRD-027" and quantity < 1:
+            return jsonify({
+                "success": False,
+                "message": "結算合約中斷：此資產不接受反向沖銷 (ERR_ASSET_FIXED_SETTLEMENT)。",
+            }), 400
+
         # --- 業務邏輯漏洞 (Business Logic Flaw) ---
         total_cost = unit_price * quantity
         current_balance = session.get("balance", 0)
@@ -201,7 +227,7 @@ def create_website_blueprint(db: Database):
 
         # 成功採購目標商品：高階密碼本（HU-PRD-027）
         is_target_flag_item = (product_id == "HU-PRD-027")
-        flag = "FLAG{Logic_Is_Wealth_In_Darkness}" if is_target_flag_item else None
+        flag = FLAG_2 if is_target_flag_item else None
 
         if is_target_flag_item:
             msg = "採購成功！解密酬載已生成。"
@@ -222,6 +248,7 @@ def create_website_blueprint(db: Database):
 
     # 重設帳戶餘額端點（供測試與重新挑戰時使用）
     @website_bp.post("/api/reset-balance")
+    @login_required
     def api_reset_balance():
         session["balance"] = 0
         return jsonify({"success": True, "balance": 0, "message": "帳戶 BTC 餘額已重設為 0。"})
