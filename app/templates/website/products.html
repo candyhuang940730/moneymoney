@@ -1,0 +1,902 @@
+{% extends "base.html" %}
+
+{% block title %}黑市交易目錄｜Hydra Underground{% endblock %}
+
+{% block content %}
+<style>
+  .reset-chip-btn {
+    background: rgba(187, 104, 94, 0.15);
+    border: 1px solid rgba(187, 104, 94, 0.4);
+    color: #ff9d94;
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 3px;
+    margin-left: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--mono);
+  }
+
+  .reset-chip-btn:hover {
+    background: rgba(187, 104, 94, 0.35);
+    border-color: var(--red);
+    color: #fff;
+  }
+
+  .purchase-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .purchase-input-group label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .purchase-input-group input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--green);
+    padding: 8px 12px;
+    font-family: var(--mono);
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .purchase-input-group input:focus {
+    border-color: var(--green);
+    outline: none;
+  }
+
+  .flag-banner {
+    background: rgba(184, 245, 139, 0.08);
+    border: 1px solid var(--green);
+    border-radius: 6px;
+    padding: 16px;
+    margin: 18px 0;
+    box-shadow: 0 0 20px rgba(184, 245, 139, 0.12);
+  }
+
+  .flag-code-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #050a08;
+    border: 1px dashed var(--line-bright);
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-top: 10px;
+  }
+
+  .flag-code-container code {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--green);
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    word-break: break-all;
+  }
+
+  .btn-copy {
+    background: var(--surface-strong);
+    border: 1px solid var(--line-bright);
+    color: var(--text);
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-copy:hover {
+    background: var(--green);
+    color: #000;
+    border-color: var(--green);
+  }
+</style>
+<div class="page-shell">
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('website.index') }}" aria-label="Hydra Underground 地下網站首頁">
+      <span class="brand-mark" aria-hidden="true">H<span>/</span>U</span>
+      <span class="brand-name">HYDRA <strong>UNDERGROUND</strong></span>
+    </a>
+    <div class="header-actions">
+      <!-- 連線節點狀態 -->
+      <div class="account-chip" title="目前節點連線狀態">
+        <span class="status-dot"></span>
+        <span>節點:</span>
+        <strong id="account-name">NODE-02 / 通訊正常</strong>
+      </div>
+
+      <!-- 比特幣餘額 (BTC Balance) -->
+      <div class="balance-chip" title="目前帳戶可用 BTC 餘額">
+        <span class="status-dot"></span>
+        <span>餘額:</span>
+        <strong id="user-balance">{{ "{:,}".format(balance or 0) }}</strong>
+        <span style="color: var(--faint);">BTC</span>
+        <button id="btn-reset-balance" type="button" class="reset-chip-btn" title="重設餘額為 0 BTC（供重新演練漏洞）">重設</button>
+      </div>
+
+      <a class="header-link" href="{{ url_for('portal') }}">導覽入口</a>
+      <a class="header-link" href="{{ url_for('ctf_center.index') }}">任務中心</a>
+      <a class="header-link" href="{{ url_for('website.index') }}">登入首頁</a>
+      <button class="briefing-toggle" type="button" data-market-briefing-open aria-haspopup="dialog"
+        aria-controls="market-dialog">
+        <span class="briefing-pulse" aria-hidden="true"></span> 章節簡報 <span aria-hidden="true">↗</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="products-layout">
+    <section class="products-hero" aria-labelledby="marketplace-title">
+      <div class="system-line">
+        <span class="status-dot"></span> 受邀者節點已授權
+        <span class="system-separator">/</span> 存取級別: <span style="color: var(--muted);">TIER-2 (標準節點)</span>
+        <span class="system-separator">/</span> 結算代幣: <strong>BTC</strong>
+      </div>
+      <p class="eyebrow">第二章 / 資本累積 · 黑市目錄</p>
+      <h1 id="marketplace-title">地下資產清單。<br><span>未授權者無法追蹤的流通標的。</span></h1>
+      <p class="intro-copy">此頁面由後端動態讀取資料檔案以呈現 Hydra
+        組織內部流通販售的特權模組、實體金鑰與外洩憑證。所有物品均以比特幣（BTC）結算，初始資金為 0 BTC。</p>
+    </section>
+
+    <!-- 工具列：搜尋、分類篩選、排序 -->
+    <section class="products-toolbar" aria-label="商品篩選與控制">
+      <div class="toolbar-controls">
+        <div class="search-box">
+          <input type="text" id="product-search" placeholder="搜尋商品名稱、編號 (SKU) 或關鍵字..." aria-label="搜尋商品">
+        </div>
+        <div class="toolbar-stats">
+          <span>共 <strong id="product-count" style="color: var(--green);">{{ products|length }}</strong> 件上架項目</span>
+          <div class="sort-select-wrapper">
+            <select id="sort-order" aria-label="商品排序">
+              <option value="featured">推薦排序 / 預設</option>
+              <option value="price-asc">價格：由低至高</option>
+              <option value="price-desc">價格：由高至低</option>
+              <option value="rating-desc">評價：最高優先</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-group" role="tablist" aria-label="商品分類標籤">
+        <button class="filter-btn active" type="button" data-filter="all">全部商品 (ALL)</button>
+        <button class="filter-btn" type="button" data-filter="exploit">漏洞情報 (EXPLOIT)</button>
+        <button class="filter-btn" type="button" data-filter="hardware">硬體金鑰 (HARDWARE)</button>
+        <button class="filter-btn" type="button" data-filter="data">資料情報 (DATA)</button>
+        <button class="filter-btn" type="button" data-filter="tool">滲透工具 (TOOL)</button>
+        <button class="filter-btn" type="button" data-filter="relay">網路節點 (RELAY)</button>
+      </div>
+    </section>
+
+    <!-- 商品卡片列表 (每頁 9 筆，共 3 頁 / 27 筆商品) -->
+    <section class="products-grid" id="products-container" aria-label="黑市商品卡片清單">
+      {% for item in products[:9] %}
+      <article class="product-card" data-id="{{ item.id }}" data-sku="{{ item.sku }}"
+        data-category="{{ item.category_slug }}" data-name="{{ item.name }}" data-price="{{ item.price }}"
+        data-rating="{{ item.rating }}" data-details="{{ item.details }}">
+        <div class="product-card-top">
+          <span class="product-sku">{{ item.sku }}</span>
+          <span class="product-category-badge category-{{ item.category_slug }}">{{ item.category }}</span>
+        </div>
+
+        <div class="product-card-visual" aria-hidden="true">
+          <span
+            class="card-security-tag {% if 'CRITICAL' in item.security_tag or 'CONFIDENTIAL' in item.security_tag %}critical{% endif %}">{{
+            item.security_tag }}</span>
+          <span class="card-visual-icon">{{ item.icon }}</span>
+        </div>
+
+        <div class="product-card-body">
+          <h2 class="product-title">{{ item.name }}</h2>
+          <div class="product-subtitle">{{ item.name_en }}</div>
+          <p class="product-desc">{{ item.description }}</p>
+
+          <ul class="product-specs-list" aria-label="技術規格摘要">
+            {% for spec in item.specs %}
+            <li class="product-spec-pill">{{ spec }}</li>
+            {% endfor %}
+          </ul>
+
+          <div class="product-card-pricing">
+            <div class="price-box">
+              <span class="price-main">{{ "{:,}".format(item.price) }}</span>
+              <span class="price-currency">BTC</span>
+              <span class="price-orig">{{ "{:,}".format(item.original_price) }}</span>
+            </div>
+            <div class="stock-indicator {{ item.stock_status }}">
+              <span class="status-dot"></span>
+              <span>{{ item.stock }}</span>
+            </div>
+          </div>
+
+          <div class="product-card-actions">
+            <button class="btn-specs" type="button" data-spec-trigger="{{ item.id }}">
+              檢視規格
+            </button>
+            <button class="btn-buy" type="button" data-buy-trigger="{{ item.id }}">
+              立即採購 <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </section>
+
+    <div id="no-products-msg" class="products-empty" style="display: none;">
+      <p>⌁ 未尋獲符合篩選條件的商品節點。請更換關鍵字或選擇其他分類。</p>
+    </div>
+
+    <!-- 分頁導航列 (每頁 9 筆，共 3 頁 / 27 筆商品，切換分頁僅動態刷新商品網格區域) -->
+    <nav class="pagination-container" id="pagination-nav" aria-label="商品分頁導航">
+      <div class="page-info" id="pagination-info">
+        第 <strong id="current-page-num">1</strong> / <strong id="total-pages-num">3</strong> 頁 · 顯示第 <strong
+          id="page-range">1 - 9</strong> 筆 / 共 <strong id="total-items-num">{{ products|length }}</strong> 筆上架標的
+      </div>
+      <div class="pagination-controls" id="pagination-controls">
+        <button class="page-btn page-btn-nav" id="btn-prev-page" type="button" aria-label="上一頁" disabled>
+          ‹ 上一頁
+        </button>
+        <div class="page-numbers" id="page-numbers-container">
+          <button class="page-btn active" type="button" data-page="1">1</button>
+          <button class="page-btn" type="button" data-page="2">2</button>
+          <button class="page-btn" type="button" data-page="3">3</button>
+        </div>
+        <button class="page-btn page-btn-nav" id="btn-next-page" type="button" aria-label="下一頁">
+          下一頁 ›
+        </button>
+      </div>
+    </nav>
+  </main>
+
+  <footer class="site-footer">
+    <span>HYDRA UNDERGROUND / 第二章 · 資本累積</span>
+    <span>結算貨幣：BTC · 資料來源：products-example.json · 每頁 9 筆 (共 3 頁) · 本機授權資安教學靶場 · 所有內容均為虛構</span>
+  </footer>
+</div>
+
+<!-- 規格詳情彈窗 (Modal Dialog) -->
+<dialog id="spec-dialog" class="story-dialog" aria-labelledby="modal-title" aria-describedby="modal-desc">
+  <div class="dialog-topline">
+    <span><span class="status-dot"></span> 節點規格調閱 / 機密技術數據</span>
+    <button type="button" class="dialog-close" data-spec-close aria-label="關閉規格視窗">×</button>
+  </div>
+  <div class="dialog-content">
+    <p class="eyebrow" id="modal-category">分類標籤</p>
+    <h2 id="modal-title">商品標題</h2>
+    <p id="modal-desc" class="story-lead">商品描述</p>
+    <div class="investigation-box" style="margin-top: 20px;">
+      <h3>底層技術細節與利用參數</h3>
+      <p id="modal-details" style="font-size: 13px; line-height: 1.8; color: #dce7db;">詳細資訊載入中...</p>
+    </div>
+    <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
+      <button class="dialog-action" type="button" data-spec-close style="margin-top: 0; width: auto; padding: 0 24px;">
+        關閉視窗
+      </button>
+    </div>
+  </div>
+  <span class="dialog-coordinate" id="modal-sku" aria-hidden="true">H/U · SKU</span>
+</dialog>
+
+<!-- 章節任務簡報彈窗 -->
+<dialog id="market-dialog" class="story-dialog" aria-labelledby="market-story-title">
+  <div class="dialog-topline">
+    <span><span class="status-dot"></span> 第二章任務簡報 / 資本累積</span>
+    <button type="button" class="dialog-close" data-market-briefing-close aria-label="關閉簡報">×</button>
+  </div>
+  <div class="dialog-content">
+    <p class="eyebrow">第二章 / 資本累積</p>
+    <h2 id="market-story-title">探索市場中的<br><span>隱密線索。</span></h2>
+    <p class="story-lead">恭喜調查員突破第一道防線進入地下交易網絡。Hydra 的黑市以 BTC 作為匿名流通貨幣。背後的交易流水與折扣驗證機制往往隱藏著核心系統的通訊密鑰。</p>
+    <div class="investigation-box">
+      <h3>第二章調查重點</h3>
+      <ul>
+        <li>商品 ID 參數與越權查詢 (IDOR)</li>
+        <li>前端價格與折價券計算邏輯驗證</li>
+        <li>負數數量或浮點數精度溢位交易</li>
+        <li>敏感資料洩漏與隱藏 API 端點</li>
+      </ul>
+    </div>
+    <button class="dialog-action" type="button" data-market-briefing-close>
+      繼續調查市場 <span aria-hidden="true">↗</span>
+    </button>
+  </div>
+  <span class="dialog-coordinate" aria-hidden="true">H/U · 02/05</span>
+</dialog>
+
+<!-- 採購確認彈窗 (Purchase Dialog) -->
+<dialog id="purchase-dialog" class="story-dialog" aria-labelledby="purchase-title">
+  <div class="dialog-topline">
+    <span><span class="status-dot"></span> 匿名結算協議 / 暗網標的交易單</span>
+    <button type="button" class="dialog-close" data-purchase-close aria-label="關閉採購視窗">×</button>
+  </div>
+  <div class="dialog-content">
+    <p class="eyebrow" id="purchase-sku">H/U · SKU</p>
+    <h2 id="purchase-title">採購標的名稱</h2>
+    <p id="purchase-desc" class="story-lead">商品規格與機密等級簡介</p>
+
+    <form id="purchase-form" onsubmit="return false;" style="margin-top: 18px;">
+      <input type="hidden" id="purchase-product-id" value="">
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div class="purchase-input-group">
+          <label for="purchase-price-input">單價 (BTC) <span id="purchase-price-tag"
+              style="color: var(--faint);">[標定單價]</span></label>
+          <input type="number" id="purchase-price-input">
+        </div>
+        <div class="purchase-input-group">
+          <label for="purchase-quantity-input">採購數量 <span style="color: var(--faint);">[數量]</span></label>
+          <input type="number" id="purchase-quantity-input" value="1">
+        </div>
+      </div>
+
+      <div class="investigation-box" style="margin-top: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 13px; color: var(--muted);">預估應付結算總額：</span>
+          <span style="font-family: var(--mono); font-size: 18px; color: var(--green); font-weight: bold;"><span
+              id="purchase-total-calc">0</span> BTC</span>
+        </div>
+        <p id="purchase-status-tip" style="font-size: 12px; color: var(--faint); margin-top: 8px; margin-bottom: 0;">
+          訂單將發送至後台匿名結算合約。結算單由底層合約驗證交付。
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
+        <button class="dialog-action" type="button" data-purchase-close
+          style="margin-top: 0; width: auto; padding: 0 20px; background: transparent; border: 1px solid var(--line); color: var(--muted);">
+          取消返回
+        </button>
+        <button class="dialog-action" id="btn-confirm-purchase" type="button"
+          style="margin-top: 0; width: auto; padding: 0 28px;">
+          確認送出結算 ↗
+        </button>
+      </div>
+    </form>
+  </div>
+  <span class="dialog-coordinate" aria-hidden="true">H/U · BUY-PROTOCOL</span>
+</dialog>
+
+<!-- 第二章 FLAG 達成交付彈窗 (FLAG Delivery Modal) -->
+<dialog id="flag-delivery-dialog" class="story-dialog" aria-labelledby="flag-title">
+  <div class="dialog-topline" style="border-bottom-color: var(--green);">
+    <span><span class="status-dot" style="background: var(--green); box-shadow: 0 0 10px var(--green);"></span> 第二章調查突破
+      / 資本累積達成</span>
+    <button type="button" class="dialog-close" data-flag-close aria-label="關閉 FLAG 視窗">×</button>
+  </div>
+  <div class="dialog-content">
+    <p class="eyebrow" style="color: var(--green);">CHAPTER 02 COMPLETE / MISSION SUCCESS</p>
+    <h2 id="flag-title">高階密碼本已解密。<br><span style="color: var(--green);">已取得第二章通關憑證！</span></h2>
+    <p class="story-lead">恭喜調查員！你成功利用黑市交易系統中的業務邏輯漏洞（負數反向儲值 / 參數竄改）獲取了極高價值的「高階密碼本」。底層通訊密鑰已解封。</p>
+
+    <div class="flag-banner">
+      <h3 style="color: var(--green); margin: 0 0 6px 0; font-size: 14px;">第二章通關 FLAG (請複製保存)</h3>
+      <div class="flag-code-container">
+        <code id="flag-display-code">—</code>
+        <button type="button" id="btn-copy-flag" class="btn-copy">
+          複製 FLAG
+        </button>
+      </div>
+    </div>
+
+    <!-- 訂單交付收據明細 -->
+    <div
+      style="background: rgba(0,0,0,0.4); border: 1px solid var(--line); border-radius: 4px; padding: 12px 16px; margin-top: 14px; font-size: 13px; font-family: var(--mono);">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span style="color: var(--muted);">交易單號：</span>
+        <strong id="flag-order-id" style="color: var(--text);">HU-ORD-2026-FINAL</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span style="color: var(--muted);">交付標的：</span>
+        <strong id="flag-product-name" style="color: var(--green);">高階密碼本 / 核心協議金鑰</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--muted);">結算狀態：</span>
+        <span style="color: var(--green);">[VERIFIED] 認證通過 · 載荷已交付</span>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
+      <button class="dialog-action" type="button" data-flag-close
+        style="margin-top: 0; width: auto; padding: 0 20px; background: transparent; border: 1px solid var(--line); color: var(--muted);">
+        留在市場
+      </button>
+      <a class="dialog-action" href="{{ url_for('ctf_center.index') }}"
+        style="margin-top: 0; width: auto; padding: 0 24px; display: inline-flex; align-items: center; text-decoration: none;">
+        前往任務中心 ↗
+      </a>
+    </div>
+  </div>
+  <span class="dialog-coordinate" aria-hidden="true">FLAG · CH02</span>
+</dialog>
+
+<!-- HUD 提示訊息 (Toast) -->
+<div id="cyber-toast" class="cyber-toast" role="status" aria-live="polite">
+  <div class="toast-topline">
+    <span>[系統通訊 HUD]</span>
+    <span id="toast-time">12:00:00</span>
+  </div>
+  <div id="toast-message" class="toast-msg">交易通知</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- 伺服器傳遞之狀態設定與 JSON 商品資料（封裝於 application/json 標籤，徹底避免編輯器誤將 Jinja 模板識別為 JS 語法錯誤） -->
+<script id="site-config-data" type="application/json">
+{
+  "balance": {{ balance or 0 }}
+}
+</script>
+<script id="products-json-data" type="application/json">
+{{ products|tojson }}
+</script>
+
+<script>
+  (() => {
+    const siteConfigEl = document.getElementById("site-config-data");
+    const siteConfig = siteConfigEl ? JSON.parse(siteConfigEl.textContent || "{}") : {};
+
+    // 簡報 Dialog
+    const marketDialog = document.getElementById("market-dialog");
+    const openMarketBtn = document.querySelector("[data-market-briefing-open]");
+    const closeMarketBtns = document.querySelectorAll("[data-market-briefing-close]");
+
+    if (openMarketBtn && marketDialog) {
+      openMarketBtn.addEventListener("click", () => marketDialog.showModal());
+      closeMarketBtns.forEach(btn => btn.addEventListener("click", () => marketDialog.close()));
+    }
+
+    // 規格 Dialog
+    const specDialog = document.getElementById("spec-dialog");
+    const closeSpecBtns = document.querySelectorAll("[data-spec-close]");
+    closeSpecBtns.forEach(btn => btn.addEventListener("click", () => specDialog.close()));
+
+    // 採購確認 Dialog
+    const purchaseDialog = document.getElementById("purchase-dialog");
+    const closePurchaseBtns = document.querySelectorAll("[data-purchase-close]");
+    closePurchaseBtns.forEach(btn => btn.addEventListener("click", () => purchaseDialog && purchaseDialog.close()));
+
+    const purchaseSku = document.getElementById("purchase-sku");
+    const purchaseTitle = document.getElementById("purchase-title");
+    const purchaseDesc = document.getElementById("purchase-desc");
+    const purchaseProductId = document.getElementById("purchase-product-id");
+    const purchasePriceInput = document.getElementById("purchase-price-input");
+    const purchaseQuantityInput = document.getElementById("purchase-quantity-input");
+    const purchaseTotalCalc = document.getElementById("purchase-total-calc");
+    const btnConfirmPurchase = document.getElementById("btn-confirm-purchase");
+
+    function updatePurchaseCalc() {
+      if (!purchasePriceInput || !purchaseQuantityInput || !purchaseTotalCalc) return;
+      const p = parseInt(purchasePriceInput.value, 10) || 0;
+      const q = parseInt(purchaseQuantityInput.value, 10) || 0;
+      const total = p * q;
+      purchaseTotalCalc.textContent = total.toLocaleString();
+      if (total < 0) {
+        purchaseTotalCalc.style.color = "var(--red)";
+      } else {
+        purchaseTotalCalc.style.color = "var(--green)";
+      }
+    }
+
+    if (purchasePriceInput) purchasePriceInput.addEventListener("input", updatePurchaseCalc);
+    if (purchaseQuantityInput) purchaseQuantityInput.addEventListener("input", updatePurchaseCalc);
+
+    // FLAG 交付 Dialog
+    const flagDeliveryDialog = document.getElementById("flag-delivery-dialog");
+    const closeFlagBtns = document.querySelectorAll("[data-flag-close]");
+    closeFlagBtns.forEach(btn => btn.addEventListener("click", () => flagDeliveryDialog && flagDeliveryDialog.close()));
+
+    const btnCopyFlag = document.getElementById("btn-copy-flag");
+    if (btnCopyFlag) {
+      btnCopyFlag.addEventListener("click", () => {
+        const flagText = document.getElementById("flag-display-code")?.textContent || "";
+        if (flagText) {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(flagText).then(() => {
+              btnCopyFlag.textContent = "已複製！";
+              setTimeout(() => { btnCopyFlag.textContent = "複製 FLAG"; }, 2000);
+            }).catch(() => {
+              prompt("請手動複製 FLAG：", flagText);
+            });
+          } else {
+            prompt("請手動複製 FLAG：", flagText);
+          }
+        }
+      });
+    }
+
+    // 重設餘額按鈕
+    const btnResetBalance = document.getElementById("btn-reset-balance");
+    if (btnResetBalance) {
+      btnResetBalance.addEventListener("click", async () => {
+        try {
+          const resp = await fetch("/site/api/reset-balance", { method: "POST" });
+          const res = await resp.json();
+          currentBalance = 0;
+          if (balanceEl) balanceEl.textContent = "0";
+          showToast(res.message || "餘額已重設為 0 BTC。");
+        } catch (_) {
+          currentBalance = 0;
+          if (balanceEl) balanceEl.textContent = "0";
+          showToast("餘額已重設為 0 BTC。");
+        }
+      });
+    }
+
+    // 送出購買請求
+    if (btnConfirmPurchase) {
+      btnConfirmPurchase.addEventListener("click", async () => {
+        const pid = purchaseProductId.value;
+        const price = parseInt(purchasePriceInput.value, 10);
+        const qty = parseInt(purchaseQuantityInput.value, 10);
+
+        btnConfirmPurchase.disabled = true;
+        btnConfirmPurchase.textContent = "結算中...";
+
+        try {
+          const resp = await fetch("/site/api/buy", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ product_id: pid, price: price, quantity: qty })
+          });
+          const result = await resp.json();
+          if (resp.ok && result.success) {
+            currentBalance = result.balance;
+            if (balanceEl) balanceEl.textContent = currentBalance.toLocaleString();
+            if (purchaseDialog) purchaseDialog.close();
+            showToast(result.message);
+
+            if (result.flag) {
+              const flagCodeEl = document.getElementById("flag-display-code");
+              if (flagCodeEl) flagCodeEl.textContent = result.flag;
+              const flagOrderId = document.getElementById("flag-order-id");
+              if (flagOrderId) flagOrderId.textContent = result.order_id || "HU-ORD-2026-FINAL";
+              const flagProductName = document.getElementById("flag-product-name");
+              if (flagProductName) flagProductName.textContent = result.product_name || "高階密碼本 / 核心協議金鑰";
+              if (flagDeliveryDialog) flagDeliveryDialog.showModal();
+            }
+          } else {
+            showToast(result.message || "交易被拒絕，請確認帳戶權限與合約參數。");
+          }
+        } catch (err) {
+          showToast("通訊失敗，無法連線至結算合約。");
+        } finally {
+          btnConfirmPurchase.disabled = false;
+          btnConfirmPurchase.textContent = "確認送出結算 ↗";
+        }
+      });
+    }
+
+    // Toast 系統
+    const toast = document.getElementById("cyber-toast");
+    const toastMsg = document.getElementById("toast-message");
+    const toastTime = document.getElementById("toast-time");
+    let toastTimer = null;
+
+    function showToast(text) {
+      if (!toast) return;
+      const now = new Date();
+      toastTime.textContent = now.toTimeString().split(" ")[0];
+      toastMsg.textContent = text;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 4000);
+    }
+
+    // 比特幣帳戶餘額（從 siteConfig 安全讀取，杜絕編輯器 JS 語法報錯）
+    let currentBalance = parseInt(siteConfig.balance, 10) || 0;
+    const balanceEl = document.getElementById("user-balance");
+
+    // DOM 容器與控制項
+    const container = document.getElementById("products-container");
+    const countEl = document.getElementById("product-count");
+    const emptyEl = document.getElementById("no-products-msg");
+    const searchInput = document.getElementById("product-search");
+    const filterBtns = document.querySelectorAll(".filter-btn");
+    const sortSelect = document.getElementById("sort-order");
+
+    // 分頁 DOM 元素
+    const paginationNav = document.getElementById("pagination-nav");
+    const currentPageNum = document.getElementById("current-page-num");
+    const totalPagesNum = document.getElementById("total-pages-num");
+    const pageRange = document.getElementById("page-range");
+    const totalItemsNum = document.getElementById("total-items-num");
+    const btnPrev = document.getElementById("btn-prev-page");
+    const btnNext = document.getElementById("btn-next-page");
+    const pageNumbersContainer = document.getElementById("page-numbers-container");
+
+    // 全站商品資料（從 application/json 標籤安全解析，兼具語法純淨度與編輯器相容性）
+    const productsDataEl = document.getElementById("products-json-data");
+    const allProducts = productsDataEl ? JSON.parse(productsDataEl.textContent || "[]") : [];
+    const ITEMS_PER_PAGE = 9;
+    let currentPage = 1;
+    let filteredProducts = [...allProducts];
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function buildCardHtml(item) {
+      const isCritical = (item.security_tag || "").includes("CRITICAL") || (item.security_tag || "").includes("CONFIDENTIAL");
+      const specsHtml = (item.specs || []).map(s => `<li class="product-spec-pill">${escapeHtml(s)}</li>`).join("");
+
+      return `
+      <article
+        class="product-card"
+        data-id="${escapeHtml(item.id)}"
+        data-sku="${escapeHtml(item.sku)}"
+        data-category="${escapeHtml(item.category_slug)}"
+        data-name="${escapeHtml(item.name)}"
+        data-price="${item.price}"
+        data-rating="${item.rating}"
+        data-details="${escapeHtml(item.details || '')}"
+      >
+        <div class="product-card-top">
+          <span class="product-sku">${escapeHtml(item.sku)}</span>
+          <span class="product-category-badge category-${escapeHtml(item.category_slug)}">${escapeHtml(item.category)}</span>
+        </div>
+        <div class="product-card-visual" aria-hidden="true">
+          <span class="card-security-tag ${isCritical ? 'critical' : ''}">${escapeHtml(item.security_tag)}</span>
+          <span class="card-visual-icon">${escapeHtml(item.icon)}</span>
+        </div>
+        <div class="product-card-body">
+          <h2 class="product-title">${escapeHtml(item.name)}</h2>
+          <div class="product-subtitle">${escapeHtml(item.name_en)}</div>
+          <p class="product-desc">${escapeHtml(item.description)}</p>
+          <ul class="product-specs-list" aria-label="技術規格摘要">
+            ${specsHtml}
+          </ul>
+          <div class="product-card-pricing">
+            <div class="price-box">
+              <span class="price-main">${item.price.toLocaleString()}</span>
+              <span class="price-currency">BTC</span>
+              <span class="price-orig">${item.original_price.toLocaleString()}</span>
+            </div>
+            <div class="stock-indicator ${escapeHtml(item.stock_status || '')}">
+              <span class="status-dot"></span>
+              <span>${escapeHtml(item.stock)}</span>
+            </div>
+          </div>
+          <div class="product-card-actions">
+            <button class="btn-specs" type="button" data-spec-trigger="${escapeHtml(item.id)}">檢視規格</button>
+            <button class="btn-buy" type="button" data-buy-trigger="${escapeHtml(item.id)}">立即採購 <span aria-hidden="true">↗</span></button>
+          </div>
+        </div>
+      </article>
+    `;
+    }
+
+    // 嘗試透過 AJAX 端點載入指定分頁商品資料，若失敗則無縫退回前端陣列切片
+    async function fetchPageData(page) {
+      // 若有自訂關鍵字搜尋或非全部分類，以本地過濾陣列進行精準切片
+      const hasActiveFilters = activeCategory !== "all" || searchQuery.trim() !== "" || (sortSelect && sortSelect.value !== "featured");
+      if (!hasActiveFilters) {
+        try {
+          const resp = await fetch(`/site/api/products?page=${page}&per_page=${ITEMS_PER_PAGE}`);
+          if (resp.ok) {
+            const result = await resp.json();
+            if (result && Array.isArray(result.items)) {
+              return result.items;
+            }
+          }
+        } catch (_) {
+          // AJAX 離線或被阻擋時直接使用記憶體陣列
+        }
+      }
+      const startIndex = (page - 1) * ITEMS_PER_PAGE;
+      return filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }
+
+    // 動態更新商品網格與分頁列（切換分頁時僅動態更新商品網格 section，不刷新整個網頁）
+    async function renderCurrentPage(smoothScroll = false) {
+      const totalItems = filteredProducts.length;
+      const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      if (totalItems === 0) {
+        container.innerHTML = "";
+        if (emptyEl) emptyEl.style.display = "block";
+        if (paginationNav) paginationNav.style.display = "none";
+        if (countEl) countEl.textContent = "0";
+        return;
+      }
+
+      if (emptyEl) emptyEl.style.display = "none";
+      if (paginationNav) paginationNav.style.display = "flex";
+      if (countEl) countEl.textContent = totalItems;
+
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+
+      // 透過 AJAX / 前端快速取得該頁的 9 筆商品資料
+      const pageItems = await fetchPageData(currentPage);
+
+      // 僅動態更新商品網格區域 (product grid section)，不影響其餘任何網頁區塊
+      container.innerHTML = pageItems.map(buildCardHtml).join("");
+
+      // 更新分頁狀態資訊
+      if (currentPageNum) currentPageNum.textContent = currentPage;
+      if (totalPagesNum) totalPagesNum.textContent = totalPages;
+      if (pageRange) pageRange.textContent = `${startIndex + 1} - ${endIndex}`;
+      if (totalItemsNum) totalItemsNum.textContent = totalItems;
+
+      // 更新上一頁 / 下一頁按鈕狀態
+      if (btnPrev) btnPrev.disabled = (currentPage === 1);
+      if (btnNext) btnNext.disabled = (currentPage === totalPages);
+
+      // 生成頁碼按鈕 (例如第 1、2、3 頁)
+      if (pageNumbersContainer) {
+        pageNumbersContainer.innerHTML = "";
+        for (let p = 1; p <= totalPages; p++) {
+          const pageBtn = document.createElement("button");
+          pageBtn.type = "button";
+          pageBtn.className = "page-btn" + (p === currentPage ? " active" : "");
+          pageBtn.textContent = p;
+          pageBtn.setAttribute("aria-label", `前往第 ${p} 頁`);
+          pageBtn.addEventListener("click", () => {
+            if (currentPage !== p) {
+              currentPage = p;
+              renderCurrentPage(true);
+            }
+          });
+          pageNumbersContainer.appendChild(pageBtn);
+        }
+      }
+
+      if (smoothScroll) {
+        const toolbar = document.querySelector(".products-toolbar");
+        if (toolbar) {
+          toolbar.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    }
+
+    // 監聽上一頁 / 下一頁按鈕
+    if (btnPrev) {
+      btnPrev.addEventListener("click", () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderCurrentPage(true);
+        }
+      });
+    }
+
+    if (btnNext) {
+      btnNext.addEventListener("click", () => {
+        const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderCurrentPage(true);
+        }
+      });
+    }
+
+    // 規格按鈕與採購按鈕（事件委託在 container 上，動態換頁後皆能正常觸發）
+    container.addEventListener("click", (e) => {
+      const specBtn = e.target.closest("[data-spec-trigger]");
+      if (specBtn && specDialog) {
+        const card = specBtn.closest(".product-card");
+        if (!card) return;
+        document.getElementById("modal-category").textContent = card.dataset.category.toUpperCase() + " / " + card.dataset.sku;
+        document.getElementById("modal-title").textContent = card.dataset.name;
+        document.getElementById("modal-desc").textContent = card.querySelector(".product-desc")?.textContent || "";
+        document.getElementById("modal-details").textContent = card.dataset.details || "無詳細技術數據";
+        document.getElementById("modal-sku").textContent = "H/U · " + card.dataset.sku;
+        specDialog.showModal();
+        return;
+      }
+
+      const buyBtn = e.target.closest("[data-buy-trigger]");
+      if (buyBtn) {
+        const card = buyBtn.closest(".product-card");
+        if (!card) return;
+        const price = parseInt(card.dataset.price, 10) || 0;
+        const name = card.dataset.name;
+        const sku = card.dataset.sku;
+        const id = card.dataset.id;
+        const desc = card.querySelector(".product-desc")?.textContent || "";
+
+        if (purchaseProductId) purchaseProductId.value = id;
+        if (purchaseSku) purchaseSku.textContent = "H/U · " + sku;
+        if (purchaseTitle) purchaseTitle.textContent = name;
+        if (purchaseDesc) purchaseDesc.textContent = desc;
+        if (purchasePriceInput) {
+          purchasePriceInput.value = price;
+          purchasePriceInput.readOnly = false;
+          purchasePriceInput.style.borderColor = "var(--line)";
+          const tag = document.getElementById("purchase-price-tag");
+          if (tag) tag.innerHTML = '<span style="color: var(--faint);">[標定單價]</span>';
+        }
+        if (purchaseQuantityInput) purchaseQuantityInput.value = 1;
+        updatePurchaseCalc();
+
+        const tip = document.getElementById("purchase-status-tip");
+        if (tip) {
+          tip.innerHTML = '訂單將發送至後台匿名結算合約。結算單由底層合約驗證交付。';
+        }
+
+        if (purchaseDialog) {
+          purchaseDialog.showModal();
+        }
+      }
+    });
+
+    // 搜尋與篩選邏輯
+    let activeCategory = "all";
+    let searchQuery = "";
+
+    function applyFilterAndSearch() {
+      const q = searchQuery.toLowerCase().trim();
+
+      filteredProducts = allProducts.filter(item => {
+        const matchesCat = (activeCategory === "all" || item.category_slug === activeCategory);
+        const sku = (item.sku || "").toLowerCase();
+        const name = (item.name || "").toLowerCase();
+        const desc = (item.description || "").toLowerCase();
+        const matchesSearch = !q || (sku.includes(q) || name.includes(q) || desc.includes(q));
+        return matchesCat && matchesSearch;
+      });
+
+      applySorting(false);
+      currentPage = 1; // 篩選/搜尋變更時切回第 1 頁
+      renderCurrentPage(false);
+    }
+
+    function applySorting(triggerRender = true) {
+      const mode = sortSelect ? sortSelect.value : "featured";
+      if (mode === "price-asc") {
+        filteredProducts.sort((a, b) => a.price - b.price);
+      } else if (mode === "price-desc") {
+        filteredProducts.sort((a, b) => b.price - a.price);
+      } else if (mode === "rating-desc") {
+        filteredProducts.sort((a, b) => b.rating - a.rating);
+      } else {
+        // 依原始清單順序
+        const idOrder = new Map(allProducts.map((it, idx) => [it.id, idx]));
+        filteredProducts.sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0));
+      }
+
+      if (triggerRender) {
+        renderCurrentPage(false);
+      }
+    }
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        filterBtns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeCategory = btn.dataset.filter;
+        applyFilterAndSearch();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        searchQuery = e.target.value;
+        applyFilterAndSearch();
+      });
+    }
+
+    if (sortSelect) {
+      sortSelect.addEventListener("change", () => {
+        applySorting(true);
+      });
+    }
+
+    // 初始化分頁顯示（第 1 頁，共 3 頁 / 27 筆商品）
+    renderCurrentPage(false);
+  })();
+</script>
+{% endblock %}

@@ -10,6 +10,7 @@
 | 登入表單 | `POST /site/login` | `username`、`password` |
 | 登出 | `POST /site/logout` | 無 |
 | 忘記密碼入口 | `GET /site/forgot-password` | 無 |
+| 商品頁 | `GET/POST /site/products` | 暫無 | 已實作正常商品頁面（BTC 計價，身分檢查已註解，以 `products-example.json` 範例檔展示） |
 
 註冊時，帳號需為 3–32 個字元且不可包含空白；密碼需為 8–128 個字元，並與確認密碼相同。後端也會檢查重複帳號。驗證失敗時，註冊頁會顯示錯誤訊息，密碼欄位不會回填。登入使用 Flask Session 記錄使用者 ID。
 

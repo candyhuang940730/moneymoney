@@ -27,18 +27,28 @@
 
       <div class="signal-card" aria-hidden="true">
         <div class="signal-card-top"><span>節點觀測</span><span>H/U—01</span></div>
-        <div class="signal-visual"><div class="signal-ring signal-ring-outer"></div><div class="signal-ring signal-ring-inner"></div><span class="signal-glyph">H<span>⟋</span>U</span></div>
+        <div class="signal-visual">
+          <div class="signal-ring signal-ring-outer"></div>
+          <div class="signal-ring signal-ring-inner"></div><span class="signal-glyph">H<span>⟋</span>U</span>
+        </div>
         <div class="signal-card-bottom"><span>訊號穩定</span><span>等待身分驗證_</span></div>
       </div>
 
-      <div class="intel-strip"><span>情報片段 01</span><p>「任何堅固的入口，都要先相信某個輸入。」</p></div>
+      <div class="intel-strip"><span>情報片段 01</span>
+        <p>「任何堅固的入口，都要先相信某個輸入。」</p>
+      </div>
     </section>
 
     <section class="login-column" aria-labelledby="login-title">
       <div class="login-panel">
-        <div class="panel-topline"><span class="panel-index">01 / 身分驗證</span><span class="panel-lock" aria-hidden="true">◇</span></div>
+        <div class="panel-topline"><span class="panel-index">01 / 身分驗證</span><span class="panel-lock"
+            aria-hidden="true">◇</span></div>
         {% if current_user %}
-        <div class="panel-heading"><p class="eyebrow">身分驗證完成</p><h2 id="login-title">通道已開啟</h2><p>歡迎回來，{{ current_user["UserName"] }}。</p></div>
+        <div class="panel-heading">
+          <p class="eyebrow">身分驗證完成</p>
+          <h2 id="login-title">通道已開啟</h2>
+          <p>歡迎回來，{{ current_user["UserName"] }}。</p>
+        </div>
         <p class="form-note"><span class="status-dot"></span> 已登入地下網站；商品頁待後續串接。</p>
         <form class="login-form" method="post" action="{{ url_for('website.logout') }}">
           <button class="submit-button" type="submit">登出地下網站 <span aria-hidden="true">↗</span></button>
@@ -55,7 +65,8 @@
           <input id="username" name="username" type="text" autocomplete="username" placeholder="輸入帳號" required>
 
           <div class="field-heading"><label for="password">存取密碼</label><a href="/site/forgot-password">忘記密碼？</a></div>
-          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="輸入密碼" required>
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="輸入密碼"
+            required>
 
           <p id="login-note" class="form-note"><span class="status-dot"></span> 公開註冊只會建立買家身分。</p>
           <div class="form-feedback" role="status" aria-live="polite" {% if not login_error %}hidden{% endif %}>{{ login_error or "" }}</div>
@@ -71,19 +82,32 @@
   <footer class="site-footer"><span>HYDRA UNDERGROUND / 地下網站</span><span>本機授權資安教學靶場 · 所有內容均為虛構</span></footer>
 </div>
 
-<dialog id="story-dialog" class="story-dialog" data-story-dialog aria-labelledby="story-title" aria-describedby="story-lead">
-  <div class="dialog-topline"><span><span class="status-dot"></span> 調查員專線 / 機密簡報</span><button type="button" class="dialog-close" data-story-close aria-label="關閉調查簡報">×</button></div>
+<dialog id="story-dialog" class="story-dialog" data-story-dialog aria-labelledby="story-title"
+  aria-describedby="story-lead">
+  <div class="dialog-topline"><span><span class="status-dot"></span> 調查員專線 / 機密簡報</span><button type="button"
+      class="dialog-close" data-story-close aria-label="關閉調查簡報">×</button></div>
   <div class="dialog-content">
     <p class="eyebrow">第一章 / 初來乍到</p>
     <h2 id="story-title">你已接近<br><span>Hydra 的入口。</span></h2>
     <p id="story-lead" class="story-lead">你是一名潛入地下交易網路的資安調查員。Hydra 開放新買家註冊，讓你能以普通身分進入市場；但管理層的身分與權限仍被藏了起來。</p>
     <p class="story-objective">先建立買家帳號，再觀察登入與找回密碼流程如何處理身分、輸入及查詢。取得 FLAG 後，將它帶回任務中心。</p>
-    <div class="investigation-box"><h3>可以觀察的方向</h3><p>身分入口常見的問題可能藏在這些環節；以下是探索範圍，並不表示每一項都存在於本關。</p><ul><li>註冊與輸入檢查</li><li>錯誤訊息與帳號列舉</li><li>前後端驗證差異</li><li>驗證碼與嘗試次數</li><li>請求參數與方法</li><li>資料查詢與認證邏輯</li><li>忘記密碼流程</li><li>Cookie、Session 與導向</li></ul></div>
+    <div class="investigation-box"><h3>可以觀察的方向</h3><p>身分入口常見的問題可能藏在這些環節；以下是探索範圍，並不表示每一項都存在於本關。</p>
+      <ul>
+        <li>註冊與輸入檢查</li>
+        <li>錯誤訊息與帳號列舉</li>
+        <li>前後端驗證差異</li>
+        <li>驗證碼與嘗試次數</li>
+        <li>請求參數與方法</li>
+        <li>資料查詢與認證邏輯</li>
+        <li>忘記密碼流程</li>
+        <li>Cookie、Session 與導向</li>
+      </ul>
+  </div>
     <button class="dialog-action" type="button" data-story-close>開始調查 <span aria-hidden="true">↗</span></button>
   </div>
   <span class="dialog-coordinate" aria-hidden="true">H/U · 01/05</span>
 </dialog>
 {% endblock %}
 
-{% block scripts %}<script defer src="{{ url_for('static', filename='js/story_intro.js') }}"></script>{% endblock %}
-
+{% block scripts %}
+<script defer src="{{ url_for('static', filename='js/story_intro.js') }}"></script>{% endblock %}
