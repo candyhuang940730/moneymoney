@@ -80,7 +80,7 @@ def create_website_blueprint(db: Database):
 
         session.clear()
         session["site_user_id"] = result["id"]
-        return redirect(url_for("website.index"))
+        return redirect(url_for("website.products"))
 
     @website_bp.post("/logout")
     def logout():
