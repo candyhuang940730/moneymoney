@@ -59,15 +59,35 @@ class Database:
         data = db.execute(sql,(username,)).fetchone()
         return data
 
-    #完成後回傳id
-    def set_user(self,username,password):
-        sql_syntax = "INSERT INTO users (username, password_hash) VALUES (?, ?)"
+    # 建立使用者後回傳 id；公開註冊的角色由 add_user 固定指定。
+    def set_user(self,username,password,user_role):
+        sql_syntax = "INSERT INTO users (UserName, password_hash, user_role, is_admin, is_active) VALUES (?, ?, ?, 0, 1)"
         db = self.connection()
         password_hash = generate_password_hash(password)
-        result = db.execute(sql_syntax,(username, password_hash))
+        result = db.execute(sql_syntax, (username, password_hash, user_role))
         db.commit()
         return result.lastrowid
 
+    def add_user(self,username,password,checkpassword):
+        """公開註冊買家；成功回傳 None，驗證失敗回傳訊息。"""
+        username = username.strip()
+        if not username:
+            return "帳號不應為空"
+        if len(username) < 3 or len(username) > 32 or any(char.isspace() for char in username):
+            return "帳號需為 3 至 32 個字元，且不能包含空白"
+        if not password.strip():
+            return "密碼不應為空"
+        if len(password) < 8 or len(password) > 128:
+            return "密碼需為 8 至 128 個字元"
+        if password != checkpassword:
+            return "確認密碼錯誤"
+        try:
+            self.set_user(username, password, "buyer")
+        except sqlite3.IntegrityError as exc:
+            if "UNIQUE constraint failed" in str(exc):
+                return "帳號已被使用"
+            raise
+        return None
 
     def close_connection(self, error=None):
         conn = g.pop("hydra_conn", None)

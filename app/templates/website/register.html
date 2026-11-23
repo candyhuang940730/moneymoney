@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}建立買家帳號｜Hydra Underground{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('website.index') }}" aria-label="Hydra Underground 地下網站首頁">
+      <span class="brand-mark" aria-hidden="true">H<span>/</span>U</span>
+      <span class="brand-name">HYDRA <strong>UNDERGROUND</strong></span>
+    </a>
+    <nav class="header-actions" aria-label="頁面導覽">
+      <a class="header-link" href="{{ url_for('portal') }}">導覽入口</a>
+      <a class="header-link" href="{{ url_for('ctf_center.index') }}">任務中心</a>
+      <a class="header-link" href="{{ url_for('website.index') }}">返回登入 ↗</a>
+    </nav>
+  </header>
+
+  <main class="login-layout register-layout">
+    <section class="intro-column" aria-labelledby="register-page-title">
+      <div class="system-line"><span class="status-dot"></span> 公開節點已連線 <span class="system-separator">/</span> 買家通道開放</div>
+      <p class="eyebrow">地下網路 · 建立身分</p>
+      <h1 id="register-page-title">先取得席位。<br><span>再追查真相。</span></h1>
+      <p class="intro-copy">Hydra 允許新買家自行建立帳號。這個身分只會帶你進入市場表層；更深處的權限，還得靠你自己找到線索。</p>
+
+      <div class="signal-card" aria-hidden="true">
+        <div class="signal-card-top"><span>身分節點</span><span>H/U—01</span></div>
+        <div class="signal-visual"><div class="signal-ring signal-ring-outer"></div><div class="signal-ring signal-ring-inner"></div><span class="signal-glyph">H<span>⟋</span>U</span></div>
+        <div class="signal-card-bottom"><span>買家通道可用</span><span>等待建立身分_</span></div>
+      </div>
+
+      <div class="intel-strip"><span>情報片段 01</span><p>「公開的門，未必通往所有房間。」</p></div>
+    </section>
+
+    <section class="login-column" aria-labelledby="register-title">
+      <div class="login-panel">
+        <div class="panel-topline"><span class="panel-index">01 / 建立買家帳號</span><span class="panel-lock" aria-hidden="true">◇</span></div>
+        <div class="panel-heading"><p class="eyebrow">公開註冊</p><h2 id="register-title">進入地下網路</h2><p>建立買家身分後，即可使用帳號登入。</p></div>
+
+        <form class="login-form" method="post" action="{{ url_for('website.register') }}" aria-describedby="register-note">
+          <label for="register-username">帳號識別碼</label>
+          <input id="register-username" name="username" type="text" autocomplete="username" placeholder="設定帳號" value="{{ username or '' }}" minlength="3" maxlength="32" required>
+
+          <label for="register-password">存取密碼</label>
+          <input id="register-password" name="password" type="password" autocomplete="new-password" placeholder="至少 8 個字元" minlength="8" maxlength="128" required>
+
+          <label for="register-confirm-password">確認密碼</label>
+          <input id="register-confirm-password" name="confirm_password" type="password" autocomplete="new-password" placeholder="再輸入一次密碼" minlength="8" maxlength="128" required>
+
+          <p id="register-note" class="form-note"><span class="status-dot"></span> 新帳號固定為買家；帳號需 3–32 個字元且不可包含空白。</p>
+          <div class="form-feedback" role="alert" {% if not register_error %}hidden{% endif %}>{{ register_error or "" }}</div>
+          <button class="submit-button" type="submit">建立買家帳號 <span aria-hidden="true">↗</span></button>
+        </form>
+        <div class="panel-footer"><span>公開通道 / H-U-REGISTER</span><span>買家權限</span></div>
+      </div>
+      <p class="login-aside">已有帳號？<a href="{{ url_for('website.index') }}">返回登入頁</a></p>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>HYDRA UNDERGROUND / 地下網站</span><span>本機授權資安教學靶場 · 所有內容均為虛構</span></footer>
+</div>
+{% endblock %}

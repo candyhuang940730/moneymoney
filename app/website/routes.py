@@ -12,6 +12,7 @@ from flask import (
     request,
     session,
     url_for,
+    flash
 )
 from app.website.database import Database
 
@@ -66,6 +67,28 @@ def create_website_blueprint(db: Database):
     @website_bp.get("/")
     def index():
         return render_template("website/login.html", current_user=load_site_user())
+
+    @website_bp.route("/register", methods=["GET", "POST"])
+    def register():
+        if load_site_user() is not None:
+            return redirect(url_for("website.index"))
+
+        if request.method == "GET":
+            return render_template("website/register.html")
+
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+        error = db.add_user(username, password, confirm_password)
+        if error is not None:
+            return render_template(
+                "website/register.html",
+                register_error=error,
+                username=username,
+            ), 400
+
+        flash("帳號已建立，請登入地下網站。", "success")
+        return redirect(url_for("website.index"))
 
     @website_bp.post("/login")
     def login():
